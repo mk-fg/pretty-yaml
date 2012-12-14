@@ -121,7 +121,7 @@ dump(url, sys.stdout):
       key3: тест3
       последний:
 
-Much easier to read than... anything else, diff-friendly.
+Much easier to read than... anything else! Diff-friendly.
 
 - - -
 
@@ -198,3 +198,47 @@ dump(src, sys.stdout, vspacing=[2, 1]):
 - - -
 
 Hopefully, the *why* should be obvious now.
+
+Among other features - proper readable (and working) object deduplication links
+by the grace of [unidecode](http://pypi.python.org/pypi/Unidecode) module
+transliteration and an option ("force_embed" keyword) to disable deduplication
+(imagine reading through dump riddled with such "jump there" links - none of
+that!).
+
+
+Installation
+--------------------
+
+It's a regular package for Python 2.7 (not 3.X).
+
+Using [pip](http://pip-installer.org/) is the best way:
+
+	% pip install pyaml
+
+If you don't have it, use:
+
+	% easy_install pip
+	% pip install pyaml
+
+Alternatively ([see
+also](http://www.pip-installer.org/en/latest/installing.html)):
+
+	% curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python
+	% pip install pyaml
+
+Or, if you absolutely must:
+
+	% easy_install pyaml
+
+But, you really shouldn't do that.
+
+Current-git version can be installed like this:
+
+	% pip install 'git+https://github.com/mk-fg/pyaml.git#egg=pyaml'
+
+Module uses [PyYAML](http://pyyaml.org/) for processing of the actual YAML files
+and should pull it in as a dependency.
+
+Dependency on [unidecode](http://pypi.python.org/pypi/Unidecode) module is
+optional and should only be necessary if same-id objects or recursion is used
+within serialized data.

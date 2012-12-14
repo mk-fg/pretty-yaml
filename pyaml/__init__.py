@@ -2,7 +2,6 @@
 from __future__ import unicode_literals, print_function
 
 import itertools as it, operator as op, functools as ft
-from unidecode import unidecode
 from collections import defaultdict, OrderedDict
 import os, sys, yaml
 
@@ -43,6 +42,7 @@ def dump(data, dst=unicode, safe=False, force_embed=False, vspacing=None):
 					("'" if ' ' in s.event.value else None)
 
 		def transliterate(string):
+			from unidecode import unidecode
 			string_new = ''
 			for ch in unidecode(string):
 				if '0' <= ch <= '9' or 'A' <= ch <= 'Z' or 'a' <= ch <= 'z' or ch in '-_': string_new += ch
