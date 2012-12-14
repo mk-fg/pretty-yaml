@@ -12,12 +12,12 @@ except IOError: readme = ''
 setup(
 
 	name = 'pyaml',
-	version = '12.12.4',
+	version = '12.12.5',
 	author = 'Mike Kazantsev',
 	author_email = 'mk.fraggod@gmail.com',
 	license = 'WTFPL',
 	keywords = 'yaml serialization pretty print format human readable readability',
-	url = 'https://github.com/mk-fg/pyaml',
+	url = 'https://github.com/mk-fg/pretty-yaml',
 
 	description = 'PyYAML-based module to'
 		' produce pretty and readable YAML-serialized data',
