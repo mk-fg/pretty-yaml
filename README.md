@@ -112,7 +112,7 @@ yaml.safe_dump(url, sys.stdout):
 
 YUCK!
 
-dump(url, sys.stdout):
+pyaml.dump(url, sys.stdout):
 
     path: /some/path
     query_dump:
@@ -127,8 +127,7 @@ Much easier to read than... anything else! Diff-friendly.
 
 Have a long config which will produce a wall-of-text even with indentation? No problem!
 
-dump(src, sys.stdout, vspacing=[2, 1]):
-
+pyaml.dump(src, sys.stdout, vspacing=[2, 1]):
 
     destination:
 
@@ -234,7 +233,7 @@ But, you really shouldn't do that.
 
 Current-git version can be installed like this:
 
-	% pip install 'git+https://github.com/mk-fg/pyaml.git#egg=pyaml'
+	% pip install 'git+https://github.com/mk-fg/pretty-yaml.git#egg=pyaml'
 
 Module uses [PyYAML](http://pyyaml.org/) for processing of the actual YAML files
 and should pull it in as a dependency.
