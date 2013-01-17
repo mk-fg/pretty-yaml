@@ -103,7 +103,7 @@ yaml.safe_dump(url, sys.stdout):
 
     yaml.representer.RepresenterError: cannot represent an object: OrderedDict(...
 
-    Right... let's try something *designed* to be pretty here:
+Right... let's try something *designed* to be pretty here:
 
     >>> from pprint import pprint
     >>> pprint(url)
@@ -203,6 +203,19 @@ by the grace of [unidecode](http://pypi.python.org/pypi/Unidecode) module
 transliteration and an option ("force_embed" keyword) to disable deduplication
 (imagine reading through dump riddled with such "jump there" links - none of
 that!).
+
+
+### Obligatory warning
+
+Note that prime concern for this module is to chew *simple* stuff gracefully,
+and internally, there are some nasty hacks (I'm quite ashamed of) are used to do
+that, which may not work with more complex serialization cases, possibly even
+producing non-deserializable output.
+
+Again, prime goal is not to serialize, say, gigabytes of complex
+document-storage db, but rather individual simple human-parseable documents,
+please keep that in mind (and of course, patches for hacks are welcome!).
+
 
 
 Installation
