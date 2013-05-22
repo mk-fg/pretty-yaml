@@ -81,7 +81,7 @@ def dump(data, dst=unicode, safe=False, force_embed=False, vspacing=None):
 				self.state = self.states.pop()
 			else:
 				self.write_indent()
-				self.write_indicator('  -', True, indention=True)
+				self.write_indicator('-', True, indention=True)
 				self.states.append(self.expect_block_sequence_item)
 				self.expect_node(sequence=True)
 		yaml.emitter.Emitter.expect_block_sequence_item = expect_block_sequence_item
