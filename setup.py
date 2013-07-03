@@ -12,7 +12,7 @@ except IOError: readme = ''
 setup(
 
 	name = 'pyaml',
-	version = '13.05.2',
+	version = '13.07.0',
 	author = 'Mike Kazantsev',
 	author_email = 'mk.fraggod@gmail.com',
 	license = 'WTFPL',
