@@ -74,6 +74,11 @@ def dump(data, dst=unicode, safe=False, force_embed=False, vspacing=None):
 			return orig(self, node, parent, index)
 		yaml.serializer.Serializer.serialize_node = serialize_node
 
+		def expect_block_sequence(self):
+			self.increase_indent(flow=False, indentless=False)
+			self.state = self.expect_first_block_sequence_item
+		yaml.emitter.Emitter.expect_block_sequence = expect_block_sequence
+
 		def expect_block_sequence_item( self, first=False,
 				SequenceEndEvent=yaml.emitter.SequenceEndEvent ):
 			if not first and isinstance(self.event, SequenceEndEvent):
