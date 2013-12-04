@@ -5,9 +5,22 @@ import itertools as it, operator as op, functools as ft
 from collections import defaultdict, OrderedDict
 import os, sys, yaml
 
+patched_values = {'safe': False,
+			'force_embed': False,
+			'patched': False}
 
-def dump(data, dst=unicode, safe=False, force_embed=False, vspacing=None):
+def monkey_patch(safe=False, force_embed=False):
 	### WARNING: lots of horrible monkey-patching ahead to produce more readable yaml
+
+	if patched_values['safe'] == safe\
+		and patched_values['force_embed'] == force_embed\
+		and patched_values['patched'] == True:
+		# only patch the stuff if this is the first_call or the
+		# arguments changed
+		return
+	patched_values['safe'] = safe
+	patched_values['force_embed'] = force_embed
+	patched_values['patched'] = True
 
 	yaml.representer.SafeRepresenter.add_representer(
 		defaultdict, yaml.representer.SafeRepresenter.represent_dict )
@@ -66,17 +79,32 @@ def dump(data, dst=unicode, safe=False, force_embed=False, vspacing=None):
 					for key, value in node.value:
 						self.anchor_node(key)
 						self.anchor_node(value, hint=hint+[key])
+		# only patch this is not patched yet. otherwise the code may
+		# run into an maximum recursion error if orig_anchor_node is
+		# called
+		if not hasattr(yaml.serializer.Serializer, 'orig_anchor_node'):
+			yaml.serializer.Serializer.orig_anchor_node = yaml.serializer.Serializer.anchor_node
 		yaml.serializer.Serializer.anchor_node = anchor_node
 
-		def serialize_node( self, node, parent, index,
-				orig=yaml.serializer.Serializer.serialize_node ):
+		def serialize_node( self, node, parent, index):
 			if force_embed: self.serialized_nodes.clear()
-			return orig(self, node, parent, index)
+			return self.orig_serialize_node(node, parent, index)
+		# check if orig_serialize_node already exists and only copy if
+		# it is not available yet. otherwise this code in fact run into
+		# an maximum recursion error if dump() is called multiple
+		# times. Because without this check this happens:
+		# 1. Call. serialize_node(orig_serialize_node)
+		# 2. Call. serialize_node(serialize_node(orig_serialize_node))
+		# Resulting in an error if one dumps a huge amount of yamls.
+		if not hasattr(yaml.serializer.Serializer, 'orig_serialize_node'):
+			yaml.serializer.Serializer.orig_serialize_node = yaml.serializer.Serializer.serialize_node
 		yaml.serializer.Serializer.serialize_node = serialize_node
 
 		def expect_block_sequence(self):
 			self.increase_indent(flow=False, indentless=False)
 			self.state = self.expect_first_block_sequence_item
+		if not hasattr(yaml.emitter.Emitter, 'orig_expect_block_sequence'):
+			yaml.emitter.Emitter.orig_expect_block_sequence = yaml.emitter.Emitter.expect_block_sequence
 		yaml.emitter.Emitter.expect_block_sequence = expect_block_sequence
 
 		def expect_block_sequence_item( self, first=False,
@@ -89,9 +117,28 @@ def dump(data, dst=unicode, safe=False, force_embed=False, vspacing=None):
 				self.write_indicator('-', True, indention=True)
 				self.states.append(self.expect_block_sequence_item)
 				self.expect_node(sequence=True)
+		if not hasattr(yaml.emitter.Emitter, 'orig_expect_block_sequence_item'):
+			yaml.emitter.Emitter.orig_expect_block_sequence_item = yaml.emitter.Emitter.expect_block_sequence_item
 		yaml.emitter.Emitter.expect_block_sequence_item = expect_block_sequence_item
+	else:
+		# reset to original functions
+		if hasattr(yaml.serializer.Serializer, 'orig_anchor_node'):
+			yaml.serializer.Serializer.anchor_node = yaml.serializer.Serializer.orig_anchor_node
+			del yaml.serializer.Serializer.orig_anchor_node
+		if hasattr(yaml.serializer.Serializer, 'orig_serialize_node'):
+			yaml.serializer.Serializer.serialize_node = yaml.serializer.Serializer.orig_serialize_node
+			del yaml.serializer.Serializer.orig_serialize_node
+		if hasattr(yaml.emitter.Emitter, 'orig_expect_block_sequence'):
+			yaml.emitter.Emitter.expect_block_sequence = yaml.emitter.Emitter.orig_expect_block_sequence
+			del yaml.emitter.Emitter.orig_expect_block_sequence
+		if hasattr(yaml.emitter.Emitter, 'orig_expect_block_sequence_item'):
+			yaml.emitter.Emitter.expect_block_sequence_item = yaml.emitter.Emitter.orig_expect_block_sequence_item
+			del yaml.emitter.Emitter.orig_expect_block_sequence_item
 
+
+def dump(data, dst=unicode, safe=False, force_embed=False, vspacing=None):
 	# Post-processing to add some nice'ish spacing for higher levels
+	monkey_patch(safe=safe, force_embed=force_embed)
 	from io import BytesIO
 	buff = BytesIO()
 
