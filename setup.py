@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+from codecs import open
 from setuptools import setup, find_packages
 import os
 
 pkg_root = os.path.dirname(__file__)
 
 # Error-handling here is to allow package to be built w/o README included
-try: readme = open(os.path.join(pkg_root, 'README.txt')).read()
+try: readme = open(os.path.join(pkg_root, 'README.txt'), encoding='utf-8').read()
 except IOError: readme = ''
 
 setup(
