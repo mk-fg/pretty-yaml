@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 
-from codecs import open
 from setuptools import setup, find_packages
-import os
+import os, io
 
 pkg_root = os.path.dirname(__file__)
 
 # Error-handling here is to allow package to be built w/o README included
-try: readme = open(os.path.join(pkg_root, 'README.txt'), encoding='utf-8').read()
+try: readme = io.open(os.path.join(pkg_root, 'README.txt'), encoding='utf-8').read()
 except IOError: readme = ''
 
 setup(
 
 	name = 'pyaml',
-	version = '13.12.0',
+	version = '14.04.2',
 	author = 'Mike Kazantsev',
 	author_email = 'mk.fraggod@gmail.com',
 	license = 'WTFPL',
