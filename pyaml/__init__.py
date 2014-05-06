@@ -91,7 +91,12 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 		# Use something like base64 to encode such buffer values instead
 		# Having such binary stuff pretty much everywhere on unix (e.g. paths) kinda sucks
 		data, style = unicode(data), 'plain' # read the comment above
-		if data.endswith('\n') or (data and data[0] in '!&*'): style = 'literal'
+		if data.endswith('\n') or (data and data[0] in '!&*'):
+			style = 'literal'
+			if '\n' in data[:-1]:
+				for line in data.splitlines():
+					if len(line) > 120: break
+				else: style = '|'
 		return yaml.representer.ScalarNode('tag:yaml.org,2002:str', data, style=style)
 
 for str_type in [bytes, unicode]:
