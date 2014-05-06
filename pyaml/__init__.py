@@ -82,6 +82,12 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 			self.states.append(self.expect_block_sequence_item)
 			self.expect_node(sequence=True)
 
+# Will crash on bytestrings with weird chars in them,
+#  because we can't tell if it's supposed to be e.g. utf-8 readable string
+#  or an arbitrary binary buffer
+# Explicit crash on any bytes object might be more correct, but also annoying
+# Use something like base64 to encode such buffer values instead
+# Having such binary stuff pretty much everywhere on unix (e.g. paths) kinda sucks
 for str_type in [bytes, unicode]:
 	UnsafePrettyYAMLDumper.add_representer(
 		str_type, lambda s,o: yaml.representer.ScalarNode(
