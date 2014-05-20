@@ -8,6 +8,10 @@ import os, sys, io, yaml
 
 class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 
+	def __init__(self, *args, **kws):
+		self.pyaml_force_embed = kws.pop('force_embed', False)
+		return super(PrettyYAMLDumper, self).__init__(*args, **kws)
+
 	def represent_odict(dumper, data):
 		value = list()
 		node = yaml.nodes.MappingNode(
@@ -21,18 +25,16 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 		node.flow_style = False
 		return node
 
+	def serialize_node(self, node, parent, index):
+		if self.pyaml_force_embed: self.serialized_nodes.clear()
+		return super(PrettyYAMLDumper, self).serialize_node(node, parent, index)
 
 PrettyYAMLDumper.add_representer(defaultdict, PrettyYAMLDumper.represent_dict)
 PrettyYAMLDumper.add_representer(set, PrettyYAMLDumper.represent_list)
-
 PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_odict)
 
 
 class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
-
-	def __init__(self, *args, **kws):
-		self.pyaml_force_embed = kws.pop('force_embed', False)
-		return super(UnsafePrettyYAMLDumper, self).__init__(*args, **kws)
 
 	def choose_scalar_style(self):
 		return super(UnsafePrettyYAMLDumper, self).choose_scalar_style()\
@@ -63,10 +65,6 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 				for key, value in node.value:
 					self.anchor_node(key)
 					self.anchor_node(value, hint=hint+[key])
-
-	def serialize_node(self, node, parent, index):
-		if self.pyaml_force_embed: self.serialized_nodes.clear()
-		return super(UnsafePrettyYAMLDumper, self).serialize_node(node, parent, index)
 
 	def expect_block_sequence(self):
 		self.increase_indent(flow=False, indentless=False)
