@@ -7,7 +7,7 @@ Unfortunately, by default, available serializers seem to not care about that
 aspect, producing correct but less-readable (and format allows for json-style
 crap) and poorly-formatted dumps, hence this simple module.
 
-Observe.
+Observe...
 
 - - -
 
@@ -78,12 +78,14 @@ Another example.
 
 Let's say you have a parsed URL like this:
 
+    # -*- coding: utf-8 -*-
     url = dict(
       path='/some/path',
       query_dump=OrderedDict([
-        ('key1', 'value1'),
-        ('key2', 'value2'),
-        ('key3', 'value3') ]) )
+        ('key1', 'тест1'),
+        ('key2', 'тест2'),
+        ('key3', 'тест3'),
+        ('последний', None) ]) )
 
 Order of keys in query matters because there might be a hundred of them and
 you'd like the output to be diff-friendly.
@@ -208,13 +210,14 @@ that!).
 ### Obligatory warning
 
 Note that prime concern for this module is to chew *simple* stuff gracefully,
-and internally, there are some nasty hacks (I'm quite ashamed of) are used to do
-that, which may not work with more complex serialization cases, possibly even
-producing non-deserializable output.
+and internally there are some nasty hacks (that I'm not proud of) are used to do
+it, which may not work with more complex serialization cases, possibly even
+producing non-deserializable (but fixable) output.
 
-Again, prime goal is not to serialize, say, gigabytes of complex
-document-storage db, but rather individual simple human-parseable documents,
-please keep that in mind (and of course, patches for hacks are welcome!).
+Again, prime goal is **not** to serialize, say, gigabytes of complex
+document-storage db contents, but rather individual simple human-parseable
+documents, please keep that in mind (and of course, patches for hacks are
+welcome!).
 
 
 
