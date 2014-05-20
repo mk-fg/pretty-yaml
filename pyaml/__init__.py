@@ -29,17 +29,6 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 		if self.pyaml_force_embed: self.serialized_nodes.clear()
 		return super(PrettyYAMLDumper, self).serialize_node(node, parent, index)
 
-PrettyYAMLDumper.add_representer(defaultdict, PrettyYAMLDumper.represent_dict)
-PrettyYAMLDumper.add_representer(set, PrettyYAMLDumper.represent_list)
-PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_odict)
-
-
-class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
-
-	def choose_scalar_style(self):
-		return super(UnsafePrettyYAMLDumper, self).choose_scalar_style()\
-			if self.event.style != 'plain' else ("'" if ' ' in self.event.value else None)
-
 	@staticmethod
 	def pyaml_transliterate(string):
 		from unidecode import unidecode
@@ -65,6 +54,17 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 				for key, value in node.value:
 					self.anchor_node(key)
 					self.anchor_node(value, hint=hint+[key])
+
+PrettyYAMLDumper.add_representer(defaultdict, PrettyYAMLDumper.represent_dict)
+PrettyYAMLDumper.add_representer(set, PrettyYAMLDumper.represent_list)
+PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_odict)
+
+
+class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
+
+	def choose_scalar_style(self):
+		return super(UnsafePrettyYAMLDumper, self).choose_scalar_style()\
+			if self.event.style != 'plain' else ("'" if ' ' in self.event.value else None)
 
 	def expect_block_sequence(self):
 		self.increase_indent(flow=False, indentless=False)
