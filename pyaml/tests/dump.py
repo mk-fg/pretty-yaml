@@ -1,0 +1,239 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals, print_function
+
+import itertools as it, operator as op, functools as ft
+from collections import Mapping, OrderedDict
+import os, sys, io, yaml, pyaml, unittest
+
+
+large_yaml = b'''
+### Default (baseline) configuration parameters.
+### DO NOT ever change this config, use -c commandline option instead!
+
+# Note that this file is YAML, so YAML types can be used here, see http://yaml.org/type/
+# For instance, large number can be specified as "10_000_000" or "!!float 10e6".
+
+source:
+  # Path or glob pattern (to match path) to backup, required
+  path: # example: /srv/backups/weekly.*
+
+  queue:
+    # Path to intermediate backup queue-file (list of paths to upload), required
+    path: # example: /srv/backups/queue.txt
+    # Don't rebuild queue-file if it's newer than source.path
+    check_mtime: true
+
+  entry_cache:
+    # Path to persistent db (sqlite) of remote directory nodes, required
+    path: # example: /srv/backups/dentries.sqlite
+
+  # How to pick a path among those matched by "path" glob
+  pick_policy: alphasort_last # only one supported
+
+
+destination:
+  # URL of Tahoe-LAFS node webapi
+  url: http://localhost:3456/uri
+
+  result: # what to do with a cap (URI) of a resulting tree (with full backup)
+    print_to_stdout: true
+    # Append the entry to the specified file (creating it, if doesn't exists)
+    # Example entry: "2012-10-10T23:12:43.904543 /srv/backups/weekly.2012-10-10 URI:DIR2-CHK:..."
+    append_to_file: # example: /srv/backups/lafs_caps
+    # Append the entry to specified tahoe-lafs directory (i.e. put it into that dir)
+    append_to_lafs_dir: # example: URI:DIR2:...
+
+  encoding:
+    xz:
+      enabled: true
+      options: # see lzma.LZMAOptions, empty = module defaults
+      min_size: 5120 # don't compress files smaller than 5 KiB (unless overidden in "path_filter")
+      path_filter:
+        # List of include/exclude regexp path-rules, similar to "filter" section below.
+        # Same as with "filter", rules can be tuples with '+' or '-' (implied for strings) as first element.
+        #  '+' will indicate that file is compressible, if it's size >= "min_size" option.
+        #  Unlike "filter", first element of rule-tuple can also be a number,
+        #   overriding "min_size" parameter for matched (by that rule) paths.
+        # If none of the patterns match path, file is handled as if it was matched by '+' rule.
+
+        - '\.(gz|bz2|t[gb]z2?|xz|lzma|7z|zip|rar)$'
+        - '\.(rpm|deb|iso)$'
+        - '\.(jpe?g|gif|png|mov|avi|ogg|mkv|webm|mp[34g]|flv|flac|ape|pdf|djvu)$'
+        - '\.(sqlite3?|fossil|fsl)$'
+        - '\.git/objects/[0-9a-f]+/[0-9a-f]+$'
+        # - [500, '\.(txt|csv|log|md|rst|cat|(ba|z|k|c|fi)?sh|env)$']
+        # - [500, '\.(cgi|py|p[lm]|php|c|h|[ce]l|lisp|hs|patch|diff|xml|xsl|css|x?html[45]?|js)$']
+        # - [500, '\.(co?nf|cfg?|li?st|ini|ya?ml|jso?n|vg|tab)(\.(sample|default|\w+-new))?$']
+        # - [500, '\.(unit|service|taget|mount|desktop|rules|rc|menu)$']
+        # - [2000, '^/etc/']
+
+
+http:
+  request_pool_options:
+    maxPersistentPerHost: 10
+    cachedConnectionTimeout: 600
+    retryAutomatically: true
+  ca_certs_files: /etc/ssl/certs/ca-certificates.crt # can be a list
+  debug_requests: false # insecure! logs will contain tahoe caps
+
+
+filter:
+  # Either tuples like "[action ('+' or '-'), regexp]" or just exclude-patterns (python
+  #  regexps) to match relative (to source.path, starting with "/") paths to backup.
+  # Patterns are matched against each path in order they're listed here.
+  # Leaf directories are matched with the trailing slash
+  #  (as with rsync) to be distinguishable from files with the same name.
+  # If path doesn't match any regexp on the list, it will be included.
+  #
+  # Examples:
+  #  - ['+', '/\.git/config$']   # backup git repository config files
+  #  - '/\.git/'   # *don't* backup any repository objects
+  #  - ['-', '/\.git/']   # exactly same thing as above (redundant)
+  #  - '/(?i)\.?svn(/.*|ignore)$' # exclude (case-insensitive) svn (or .svn) paths and ignore-lists
+
+  - '/(CVS|RCS|SCCS|_darcs|\{arch\})/$'
+  - '/\.(git|hg|bzr|svn|cvs)(/|ignore|attributes|tags)?$'
+  - '/=(RELEASE-ID|meta-update|update)$'
+
+
+operation:
+  queue_only: false # only generate upload queue file, don't upload anything
+  reuse_queue: false # don't generate upload queue file, use existing one as-is
+  disable_deduplication: false # make no effort to de-duplicate data (should still work on tahoe-level for files)
+
+  # Rate limiting might be useful to avoid excessive cpu/net usage on nodes,
+  #  and especially when uploading to rate-limited api's (like free cloud storages).
+  # Only used when uploading objects to the grid, not when building queue file.
+  # Format of each value is "interval[:burst]", where "interval" can be specified as rate (e.g. "1/3e5").
+  # Simple token bucket algorithm is used. Empty values mean "no limit".
+  # Examples:
+  #   "objects: 1/10:50" - 10 objects per second, up to 50 at once (if rate was lower before).
+  #   "objects: 0.1:50" - same as above.
+  #   "objects: 10:20" - 1 object in 10 seconds, up to 20 at once.
+  #   "objects: 5" - make interval between object uploads equal 5 seconds.
+  #   "bytes: 1/3e6:50e6" - 3 MB/s max, up to 50 MB/s if connection was underutilized before.
+  rate_limit:
+    bytes: # limit on rate of *file* bytes upload, example: 1/3e5:20e6
+    objects: # limit on rate of uploaded objects, example: 10:50
+
+
+logging: # see http://docs.python.org/library/logging.config.html
+  # "custom" level means WARNING/DEBUG/NOISE, depending on CLI options
+  warnings: true # capture python warnings
+  sql_queries: false # log executed sqlite queries (very noisy, caps will be there)
+
+  version: 1
+  formatters:
+    basic:
+      format: '%(asctime)s :: %(name)s :: %(levelname)s: %(message)s'
+      datefmt: '%Y-%m-%d %H:%M:%S'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      stream: ext://sys.stderr
+      formatter: basic
+      level: custom
+    debug_logfile:
+      class: logging.handlers.RotatingFileHandler
+      filename: /srv/backups/debug.log
+      formatter: basic
+      encoding: utf-8
+      maxBytes: 5242880 # 5 MiB
+      backupCount: 2
+      level: NOISE
+  loggers:
+    twisted:
+      handlers: [console]
+      level: 0
+  root:
+    level: custom
+    handlers: [console]
+'''
+
+data = dict(
+	path='/some/path',
+	query_dump=OrderedDict([
+		('key1', 'тест1'),
+		('key2', 'тест2'),
+		('key3', 'тест3'),
+		('последний', None) ]),
+	ids=OrderedDict(),
+	a=[1,None,'asd', 'не-ascii'], b=3.5, c=None,
+	asd=OrderedDict([('b', 1), ('a', 2)]) )
+data['query_dump_clone'] = data['query_dump']
+data['ids']['id в уникоде'] = [4, 5, 6]
+data['ids']['id2 в уникоде'] = data['ids']['id в уникоде']
+# data["'asd'\n!\0\1"] =OrderedDict([('b', 1), ('a', 2)]) <-- fails in many ways
+
+
+class DumpTests(unittest.TestCase):
+
+	def flatten(self, data, path=tuple()):
+		dst = list()
+		if isinstance(data, (tuple, list)):
+			for v in data:
+				dst.extend(self.flatten(v, path + (list,)))
+		elif isinstance(data, Mapping):
+			for k,v in data.viewitems():
+				dst.extend(self.flatten(v, path + (k,)))
+		else: dst.append((path, data))
+		return tuple(sorted(dst))
+
+	def test_dst(self):
+		buff = io.BytesIO()
+		self.assertIs(pyaml.dump(data, buff), None)
+		self.assertIsInstance(pyaml.dump(data, str), str)
+		self.assertIsInstance(pyaml.dump(data, unicode), unicode)
+
+	def test_simple(self):
+		a = self.flatten(data)
+		b = pyaml.dump(data, unicode)
+		self.assertEquals(a, self.flatten(yaml.load(b)))
+
+	def test_vspacing(self):
+		data = yaml.load(large_yaml)
+		a = self.flatten(data)
+		b = pyaml.dump(data, unicode, vspacing=[2, 1])
+		self.assertEquals(a, self.flatten(yaml.load(b)))
+		pos, pos_list = 0, list()
+		while True:
+			pos = b.find(u'\n', pos+1)
+			if pos < 0: break
+			pos_list.append(pos)
+		self.assertEquals( pos_list,
+			[ 12, 13, 25, 33, 53, 74, 89, 108, 158, 185, 265, 300, 345, 346, 356, 376, 400, 426, 427,
+				460, 461, 462, 470, 508, 564, 603, 604, 605, 611, 612, 665, 666, 690, 691, 715, 748,
+				777, 806, 807, 808, 817, 818, 832, 843, 878, 948, 949, 961, 974, 1009, 1032, 1052,
+				1083, 1102, 1123, 1173, 1195, 1234, 1257, 1276, 1300, 1301, 1312, 1325, 1341, 1359,
+				1374, 1375, 1383, 1397, 1413, 1431, 1432, 1453, 1454, 1467, 1468, 1485, 1486, 1487,
+				1498, 1499, 1530, 1531, 1551, 1552, 1566, 1577, 1590, 1591, 1612, 1613, 1614, 1622,
+				1623, 1638, 1648, 1649, 1657, 1658, 1688, 1689, 1698, 1720, 1730 ] )
+		b = pyaml.dump(data, unicode)
+		self.assertNotIn('\n\n', b)
+
+	def test_ids(self):
+		b = pyaml.dump(data, unicode)
+		self.assertNotIn('&id00', b)
+		self.assertIn('query_dump_clone: *query_dump_clone', b)
+		self.assertIn("'id в уникоде': &ids_-_id2_v_unikode", b) # kinda bug - should be just "id"
+
+	def test_force_embed(self):
+		b = pyaml.dump(data, unicode, force_embed=True)
+		c = pyaml.dump(data, unicode, safe=True, force_embed=True)
+		for char, dump in it.product('*&', [b, c]):
+			self.assertNotIn(char, dump)
+
+	def test_encoding(self):
+		b = pyaml.dump(data, unicode, force_embed=True)
+		b_lines = map(unicode.strip, b.splitlines())
+		chk = ['query_dump:', 'key1: тест1', 'key2: тест2', 'key3: тест3', 'последний:']
+		pos = b_lines.index('query_dump:')
+		self.assertEqual(b_lines[pos:pos + len(chk)], chk)
+
+
+if __name__ == '__main__':
+	unittest.main()
+	# print('-'*80)
+	# pyaml.dump(yaml.load(large_yaml), sys.stdout)
+	# print('-'*80)
+	# pyaml.dump(data, sys.stdout)
