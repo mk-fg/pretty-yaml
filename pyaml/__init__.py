@@ -147,3 +147,13 @@ def dump(data, dst=unicode, safe=False, force_embed=False, vspacing=None):
 		return buff.getvalue().decode('utf-8')
 	else:
 		dst.write(buff.getvalue())
+
+def dumps(data, **dump_kws):
+	return dump(data, dst=bytes, **dump_kws)
+
+def pprint(*data, **dump_kws):
+	dst = dump_kws.pop('file', dump_kws.pop('dst', sys.stdout))
+	if len(data) == 1: data, = data
+	dump(data, dst=dst, **dump_kws)
+
+print = pprint # pyaml.print() won't work without "from __future__ import print_function"

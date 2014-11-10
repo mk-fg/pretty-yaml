@@ -284,6 +284,24 @@ class DumpTests(unittest.TestCase):
 		self.assertGreater(len(b_lines), len(data_str_multiline['cert'].splitlines()))
 		for line in b_lines: self.assertLess(len(line), 100)
 
+	def test_dumps(self):
+		b = pyaml.dumps(data_str_multiline)
+		self.assertIsInstance(b, bytes)
+
+	def test_print(self):
+		self.assertIs(pyaml.print, pyaml.pprint)
+		buff = io.BytesIO()
+		b = pyaml.dump(data_str_multiline, dst=bytes)
+		pyaml.print(data_str_multiline, file=buff)
+		self.assertEqual(b, buff.getvalue())
+
+	def test_print_args(self):
+		buff = io.BytesIO()
+		args = 1, 2, 3
+		b = pyaml.dump(args, dst=bytes)
+		pyaml.print(*args, file=buff)
+		self.assertEqual(b, buff.getvalue())
+
 
 if __name__ == '__main__':
 	unittest.main()

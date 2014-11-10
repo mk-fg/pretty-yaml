@@ -72,6 +72,9 @@ pyaml.dump(src, sys.stdout):
 Note, yaml.load will read that to the same thing as the above dumps, but now you
 can read that as well.
 
+`pyaml.pprint(data)` should work just as well as `pyaml.dump(src, sys.stdout)`
+(and there's `pyaml.dumps()` to get bytes).
+
 - - -
 
 Another example.
@@ -114,7 +117,7 @@ Right... let's try something *designed* to be pretty here:
 
 YUCK!
 
-pyaml.dump(url, sys.stdout):
+pyaml.pprint(url):
 
     path: /some/path
     query_dump:
@@ -218,6 +221,21 @@ Again, prime goal is **not** to serialize, say, gigabytes of complex
 document-storage db contents, but rather individual simple human-parseable
 documents, please keep that in mind (and of course, patches for hacks are
 welcome!).
+
+
+Other Tricks
+--------------------
+
+Pretty-print any yaml or json (yaml subset) file from the shell:
+
+    python -m pyaml /path/to/some/file.yaml
+    curl -s https://status.github.com/api.json | python -m pyaml
+
+Easier "debug printf" for more complex data:
+
+    pyaml.pprint(my_data)
+    pyaml.pprint('----- WHY DOES IT BREAK!?!?', input_data, some_var, more_stuff)
+    pyaml.print(my_data) # SyntaxError without "from __future__ import print_function"
 
 
 

@@ -15,7 +15,7 @@ def main(argv=None):
 	try: data = yaml.load(src)
 	finally: src.close()
 
-	pyaml.dump(data, sys.stdout)
+	pyaml.pprint(data)
 
 
 if __name__ == '__main__': sys.exit(main())
