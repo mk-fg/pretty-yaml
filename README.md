@@ -72,8 +72,8 @@ pyaml.dump(src, sys.stdout):
 Note, yaml.load will read that to the same thing as the above dumps, but now you
 can read that as well.
 
-`pyaml.pprint(data)` should work just as well as `pyaml.dump(src, sys.stdout)`
-(and there's `pyaml.dumps()` to get bytes).
+`pyaml.pprint(data)` (or just `pyaml.p`) should work just as well as
+`pyaml.dump(src, sys.stdout)` (and there's `pyaml.dumps()` to get bytes).
 
 - - -
 
@@ -231,11 +231,12 @@ Pretty-print any yaml or json (yaml subset) file from the shell:
     python -m pyaml /path/to/some/file.yaml
     curl -s https://status.github.com/api.json | python -m pyaml
 
-Easier "debug printf" for more complex data:
+Easier "debug printf" for more complex data (all funcs below are aliases to same thing):
 
+    pyaml.p(stuff)
     pyaml.pprint(my_data)
     pyaml.pprint('----- WHY DOES IT BREAK!?!?', input_data, some_var, more_stuff)
-    pyaml.print(my_data) # SyntaxError without "from __future__ import print_function"
+    pyaml.print(data, file=sys.stderr) # needs "from __future__ import print_function"
 
 
 

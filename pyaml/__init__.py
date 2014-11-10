@@ -156,4 +156,5 @@ def pprint(*data, **dump_kws):
 	if len(data) == 1: data, = data
 	dump(data, dst=dst, **dump_kws)
 
+p = pprint
 print = pprint # pyaml.print() won't work without "from __future__ import print_function"

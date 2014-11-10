@@ -290,6 +290,7 @@ class DumpTests(unittest.TestCase):
 
 	def test_print(self):
 		self.assertIs(pyaml.print, pyaml.pprint)
+		self.assertIs(pyaml.print, pyaml.p)
 		buff = io.BytesIO()
 		b = pyaml.dump(data_str_multiline, dst=bytes)
 		pyaml.print(data_str_multiline, file=buff)
