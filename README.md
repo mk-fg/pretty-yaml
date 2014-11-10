@@ -77,6 +77,51 @@ can read that as well.
 
 - - -
 
+Multi-line X.509 data?
+
+yaml.dump(cert, sys.stdout):
+
+    {cert: !!python/unicode '-----BEGIN CERTIFICATE-----
+
+        MIIDUjCCAjoCCQD0/aLLkLY/QDANBgkqhkiG9w0BAQUFADBqMRAwDgYDVQQKFAdm
+
+        Z19jb3JlMRYwFAYDVQQHEw1ZZWthdGVyaW5idXJnMR0wGwYDVQQIExRTdmVyZGxv
+
+        ...
+
+Beautiful, is it not? (it is not)
+
+pyaml.p(cert):
+
+    cert: |-
+      -----BEGIN CERTIFICATE-----
+      MIIDUjCCAjoCCQD0/aLLkLY/QDANBgkqhkiG9w0BAQUFADBqMRAwDgYDVQQKFAdm
+      Z19jb3JlMRYwFAYDVQQHEw1ZZWthdGVyaW5idXJnMR0wGwYDVQQIExRTdmVyZGxv
+      dnNrYXlhIG9ibGFzdDELMAkGA1UEBhMCUlUxEjAQBgNVBAMTCWxvY2FsaG9zdDAg
+      Fw0xMzA0MjQwODUxMTRaGA8yMDUzMDQxNDA4NTExNFowajEQMA4GA1UEChQHZmdf
+      Y29yZTEWMBQGA1UEBxMNWWVrYXRlcmluYnVyZzEdMBsGA1UECBMUU3ZlcmRsb3Zz
+      a2F5YSBvYmxhc3QxCzAJBgNVBAYTAlJVMRIwEAYDVQQDEwlsb2NhbGhvc3QwggEi
+      MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCnZr3jbhfb5bUhORhmXOXOml8N
+      fAli/ak6Yv+LRBtmOjke2gFybPZFuXYr0lYGQ4KgarN904vEg7WUbSlwwJuszJxQ
+      Lz3xSDqQDqF74m1XeBYywZQIywKIbA/rfop3qiMeDWo3WavYp2kaxW28Xd/ZcsTd
+      bN/eRo+Ft1bor1VPiQbkQKaOOi6K8M9a/2TK1ei2MceNbw6YrlCZe09l61RajCiz
+      y5eZc96/1j436wynmqJn46hzc1gC3APjrkuYrvUNKORp8y//ye+6TX1mVbYW+M5n
+      CZsIjjm9URUXf4wsacNlCHln1nwBxUe6D4e2Hxh2Oc0cocrAipxuNAa8Afn5AgMB
+      AAEwDQYJKoZIhvcNAQEFBQADggEBADUHf1UXsiKCOYam9u3c0GRjg4V0TKkIeZWc
+      uN59JWnpa/6RBJbykiZh8AMwdTonu02g95+13g44kjlUnK3WG5vGeUTrGv+6cnAf
+      4B4XwnWTHADQxbdRLja/YXqTkZrXkd7W3Ipxdi0bDCOSi/BXSmiblyWdbNU4cHF/
+      Ex4dTWeGFiTWY2upX8sa+1PuZjk/Ry+RPMLzuamvzP20mVXmKtEIfQTzz4b8+Pom
+      T1gqPkNEbe2j1DciRNUOH1iuY+cL/b7JqZvvdQK34w3t9Cz7GtMWKo+g+ZRdh3+q
+      2sn5m3EkrUb1hSKQbMWTbnaG4C/F3i4KVkH+8AZmR9OvOmZ+7Lo=
+      -----END CERTIFICATE-----
+
+Seem to be somewhat nicer.
+
+Use e.g. `pyaml.dump(stuff, string_val_style='|')` to force all string values
+(but not keys) to some particular style (see tricks section below for examples).
+
+- - -
+
 Another example.
 
 Let's say you have a parsed URL like this:
@@ -126,7 +171,7 @@ pyaml.pprint(url):
       key3: тест3
       последний:
 
-Much easier to read than... anything else! Diff-friendly.
+Much easier to read than... anything else! Diff-friendly too.
 
 - - -
 
@@ -235,8 +280,20 @@ Easier "debug printf" for more complex data (all funcs below are aliases to same
 
     pyaml.p(stuff)
     pyaml.pprint(my_data)
-    pyaml.pprint('----- WHY DOES IT BREAK!?!?', input_data, some_var, more_stuff)
+    pyaml.pprint('----- HOW DOES THAT BREAKS!?!?', input_data, some_var, more_stuff)
     pyaml.print(data, file=sys.stderr) # needs "from __future__ import print_function"
+
+Force all string values to a certain style (see info on these in
+[PyYAML docs](http://pyyaml.org/wiki/PyYAMLDocumentation#Scalars)):
+
+    pyaml.dump(many_weird_strings, string_val_style='|')
+    pyaml.dump(multiline_words, string_val_style='>')
+    pyaml.dump(no_want_quotes, string_val_style='plain')
+
+Using `pyaml.add_representer()` (note *p*yaml) as suggested
+in [this SO thread](http://stackoverflow.com/a/7445560)
+(or [#7](https://github.com/mk-fg/pretty-yaml/issues/7))
+should also work.
 
 
 

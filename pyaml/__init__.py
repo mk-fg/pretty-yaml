@@ -10,6 +10,7 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 
 	def __init__(self, *args, **kws):
 		self.pyaml_force_embed = kws.pop('force_embed', False)
+		self.pyaml_string_val_style = kws.pop('string_val_style', None)
 		return super(PrettyYAMLDumper, self).__init__(*args, **kws)
 
 	def represent_odict(dumper, data):
@@ -62,10 +63,6 @@ PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_odict)
 
 class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 
-	def choose_scalar_style(self):
-		return super(UnsafePrettyYAMLDumper, self).choose_scalar_style()\
-			if self.event.style != 'plain' else ("'" if ' ' in self.event.value else None)
-
 	def expect_block_sequence(self):
 		self.increase_indent(flow=False, indentless=False)
 		self.state = self.expect_first_block_sequence_item
@@ -80,6 +77,14 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 			self.states.append(self.expect_block_sequence_item)
 			self.expect_node(sequence=True)
 
+	def choose_scalar_style(self):
+		if self.pyaml_string_val_style\
+				and self.states[-1] == self.expect_block_mapping_simple_value:
+			# Don't mess-up styles for dict keys, if possible
+			self.event.style = 'plain'
+		return super(UnsafePrettyYAMLDumper, self).choose_scalar_style()\
+			if self.event.style != 'plain' else ("'" if ' ' in self.event.value else None)
+
 	def represent_stringish(dumper, data):
 		# Will crash on bytestrings with weird chars in them,
 		#  because we can't tell if it's supposed to be e.g. utf-8 readable string
@@ -93,13 +98,15 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 		# Try to use '|' style for multiline data,
 		#  quoting it with 'literal' if lines are too long anyway,
 		#  not sure if Emitter.analyze_scalar can also provide useful info here
-		style = 'plain'
-		if '\n' in data or (data and data[0] in '!&*'):
-			style = 'literal'
-			if '\n' in data[:-1]:
-				for line in data.splitlines():
-					if len(line) > 120: break
-				else: style = '|'
+		style = dumper.pyaml_string_val_style
+		if not style:
+			style = 'plain'
+			if '\n' in data or (data and data[0] in '!&*'):
+				style = 'literal'
+				if '\n' in data[:-1]:
+					for line in data.splitlines():
+						if len(line) > 120: break
+					else: style = '|'
 
 		return yaml.representer.ScalarNode('tag:yaml.org,2002:str', data, style=style)
 
@@ -109,6 +116,10 @@ for str_type in [bytes, unicode]:
 
 UnsafePrettyYAMLDumper.add_representer(
 	type(None), lambda s,o: s.represent_scalar('tag:yaml.org,2002:null', '') )
+
+def add_representer(*args, **kws):
+	PrettyYAMLDumper.add_representer(*args, **kws)
+	UnsafePrettyYAMLDumper.add_representer(*args, **kws)
 
 
 def dump_add_vspacing(buff, vspacing):
@@ -132,10 +143,11 @@ def dump_add_vspacing(buff, vspacing):
 	buff.write(''.join(result).encode('utf-8'))
 
 
-def dump(data, dst=unicode, safe=False, force_embed=False, vspacing=None):
+def dump( data, dst=unicode, safe=False,
+		force_embed=False, vspacing=None, string_val_style=None ):
 	buff = io.BytesIO()
 	Dumper = PrettyYAMLDumper if safe else UnsafePrettyYAMLDumper
-	Dumper = ft.partial(Dumper, force_embed=force_embed)
+	Dumper = ft.partial(Dumper, force_embed=force_embed, string_val_style=string_val_style)
 	yaml.dump_all([data], buff, Dumper=Dumper, default_flow_style=False, encoding='utf-8')
 
 	if vspacing is not None:
@@ -156,5 +168,5 @@ def pprint(*data, **dump_kws):
 	if len(data) == 1: data, = data
 	dump(data, dst=dst, **dump_kws)
 
-p = pprint
+p, _p = pprint, print
 print = pprint # pyaml.print() won't work without "from __future__ import print_function"

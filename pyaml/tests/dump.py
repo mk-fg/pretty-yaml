@@ -303,6 +303,15 @@ class DumpTests(unittest.TestCase):
 		pyaml.print(*args, file=buff)
 		self.assertEqual(b, buff.getvalue())
 
+	def test_str_style_pick(self):
+		a = pyaml.dump(data_str_multiline)
+		b = pyaml.dump(data_str_multiline, string_val_style='|')
+		self.assertEqual(a, b)
+		b = pyaml.dump(data_str_multiline, string_val_style='plain')
+		self.assertNotEqual(a, b)
+		self.assertTrue(pyaml.dump('waka waka', string_val_style='|').startswith('|-\n'))
+		self.assertEqual(pyaml.dump(dict(a=1), string_val_style='|'), 'a: 1\n')
+
 
 if __name__ == '__main__':
 	unittest.main()
