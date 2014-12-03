@@ -5,6 +5,11 @@ import itertools as it, operator as op, functools as ft
 from collections import Mapping, OrderedDict
 import os, sys, io, yaml, pyaml, unittest
 
+# Use str instead of unicode in Python3
+try:
+	unicode()
+except NameError:
+	unicode=str
 
 large_yaml = b'''
 ### Default (baseline) configuration parameters.
@@ -267,7 +272,7 @@ class DumpTests(unittest.TestCase):
 
 	def test_encoding(self):
 		b = pyaml.dump(data, unicode, force_embed=True)
-		b_lines = map(unicode.strip, b.splitlines())
+		b_lines = list(map(unicode.strip, b.splitlines()))
 		chk = ['query_dump:', 'key1: тест1', 'key2: тест2', 'key3: тест3', 'последний:']
 		pos = b_lines.index('query_dump:')
 		self.assertEqual(b_lines[pos:pos + len(chk)], chk)

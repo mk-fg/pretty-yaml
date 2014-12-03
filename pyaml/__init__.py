@@ -5,6 +5,11 @@ import itertools as it, operator as op, functools as ft
 from collections import defaultdict, OrderedDict
 import os, sys, io, yaml
 
+# Use str instead of unicode in Python3
+try:
+	unicode()
+except NameError:
+	unicode=str
 
 class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 
