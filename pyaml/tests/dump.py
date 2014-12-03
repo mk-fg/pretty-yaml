@@ -235,19 +235,19 @@ class DumpTests(unittest.TestCase):
 	def test_simple(self):
 		a = self.flatten(data)
 		b = pyaml.dump(data, unicode)
-		self.assertEquals(a, self.flatten(yaml.load(b)))
+		self.assertEqual(a, self.flatten(yaml.load(b)))
 
 	def test_vspacing(self):
 		data = yaml.load(large_yaml)
 		a = self.flatten(data)
 		b = pyaml.dump(data, unicode, vspacing=[2, 1])
-		self.assertEquals(a, self.flatten(yaml.load(b)))
+		self.assertEqual(a, self.flatten(yaml.load(b)))
 		pos, pos_list = 0, list()
 		while True:
 			pos = b.find(u'\n', pos+1)
 			if pos < 0: break
 			pos_list.append(pos)
-		self.assertEquals( pos_list,
+		self.assertEqual(pos_list,
 			[ 12, 13, 25, 33, 53, 74, 89, 108, 158, 185, 265, 300, 345, 346, 356, 376, 400, 426, 427,
 				460, 461, 462, 470, 508, 564, 603, 604, 605, 611, 612, 665, 666, 690, 691, 715, 748,
 				777, 806, 807, 808, 817, 818, 832, 843, 878, 948, 949, 961, 974, 1009, 1032, 1052,
