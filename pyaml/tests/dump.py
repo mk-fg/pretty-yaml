@@ -3,7 +3,10 @@ from __future__ import unicode_literals, print_function
 
 import itertools as it, operator as op, functools as ft
 from collections import Mapping, OrderedDict
-import os, sys, io, yaml, pyaml, unittest
+import os, sys, io, yaml, unittest
+
+sys.path.insert(1, os.path.join(sys.path[0], "..", ".."))
+import pyaml
 
 # Use str instead of unicode in Python3
 try:
