@@ -215,48 +215,28 @@ data_str_long = dict(cert=(
 	'2sn5m3EkrUb1hSKQbMWTbnaG4C/F3i4KVkH+8AZmR9OvOmZ+7Lo=' ))
 
 # Restore Python2-like heterogeneous list sorting functionality in Python3
-# https://gist.github.com/pR0Ps/1e1a1e892aad5b691448
+# Based on https://gist.github.com/pR0Ps/1e1a1e892aad5b691448
 def compare(x, y):
-	if x == y:
-		return 0
+	if x == y: return 0
 	try:
-		# Try native compare
-		if x < y:
-			return -1
-		else:
-			return 1
+		if x < y: return -1
+		else: return 1
+
 	except TypeError as e:
-		# Can't compare the objects natively
-
-		# Special cases for None
 		# The case where both are None is taken care of by the equality test
-		if x is None:
-			return -1
-		elif y is None:
-			return 1
+		if x is None: return -1
+		elif y is None: return 1
 
-		# If the types are different, compare their type name instead
 		if type(x) != type(y):
-			if type(x).__name__ < type(y).__name__:
-				return -1
-			else:
-				return 1
+			return compare(*map(lambda t: type(t).__name__, [x, y]))
 
 		# Types are the same but a native compare didn't work.
 		# x and y might be indexable, recursively compare elements
-		lx, ly = len(x), len(y)
-		for i in range(min(lx, ly)):
-			c = compare(x[i], y[i])
-			if c != 0:
-				return c
+		for a, b in zip(x, y):
+			c = compare(a, b)
+			if c != 0: return c
 
-		# All compared elements are the same, compare based on length
-		if lx == ly:
-			return 0
-		elif lx < ly:
-			return -1
-		else:
-			return 1
+		return compare(len(x), len(y))
 
 class DumpTests(unittest.TestCase):
 
@@ -292,7 +272,7 @@ class DumpTests(unittest.TestCase):
 			pos = b.find(u'\n', pos+1)
 			if pos < 0: break
 			pos_list.append(pos)
-		self.assertEqual(pos_list,
+		self.assertEqual( pos_list,
 			[ 12, 13, 25, 33, 53, 74, 89, 108, 158, 185, 265, 300, 345, 346, 356, 376, 400, 426, 427,
 				460, 461, 462, 470, 508, 564, 603, 604, 605, 611, 612, 665, 666, 690, 691, 715, 748,
 				777, 806, 807, 808, 817, 818, 832, 843, 878, 948, 949, 961, 974, 1009, 1032, 1052,
