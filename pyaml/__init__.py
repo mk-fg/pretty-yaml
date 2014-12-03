@@ -11,6 +11,17 @@ try:
 except NameError:
 	unicode=str
 
+# Keep viewitems functionality for Python 2 and 3
+try:
+	dict.viewitems
+except AttributeError:
+	def viewitems(d):
+		return d.items()
+else:
+	def viewitems(d):
+		return d.viewitems()
+
+
 class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 
 	def __init__(self, *args, **kws):
@@ -24,7 +35,7 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 			'tag:yaml.org,2002:map', value, flow_style=None )
 		if dumper.alias_key is not None:
 			dumper.represented_objects[dumper.alias_key] = node
-		for item_key, item_value in data.viewitems():
+		for item_key, item_value in viewitems(data):
 			node_key = dumper.represent_data(item_key)
 			node_value = dumper.represent_data(item_value)
 			value.append((node_key, node_value))

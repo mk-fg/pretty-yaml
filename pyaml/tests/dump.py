@@ -221,7 +221,7 @@ class DumpTests(unittest.TestCase):
 			for v in data:
 				dst.extend(self.flatten(v, path + (list,)))
 		elif isinstance(data, Mapping):
-			for k,v in data.viewitems():
+			for k,v in data.items():
 				dst.extend(self.flatten(v, path + (k,)))
 		else: dst.append((path, data))
 		return tuple(sorted(dst))
