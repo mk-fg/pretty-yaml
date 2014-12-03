@@ -8,11 +8,8 @@ import os, sys, io, yaml, unittest
 sys.path.insert(1, os.path.join(sys.path[0], "..", ".."))
 import pyaml
 
-# Use str instead of unicode in Python3
-try:
-	unicode()
-except NameError:
-	unicode=str
+if sys.version_info.major > 2: unicode = str
+
 
 large_yaml = b'''
 ### Default (baseline) configuration parameters.

@@ -5,11 +5,7 @@ import itertools as it, operator as op, functools as ft
 from collections import defaultdict, OrderedDict
 import os, sys, io, yaml
 
-# Use str instead of unicode in Python3
-try:
-	unicode()
-except NameError:
-	unicode=str
+if sys.version_info.major > 2: unicode = str
 
 
 class PrettyYAMLDumper(yaml.dumper.SafeDumper):
@@ -116,7 +112,7 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 
 		return yaml.representer.ScalarNode('tag:yaml.org,2002:str', data, style=style)
 
-for str_type in [bytes, unicode]:
+for str_type in {bytes, unicode}:
 	UnsafePrettyYAMLDumper.add_representer(
 		str_type, UnsafePrettyYAMLDumper.represent_stringish )
 
