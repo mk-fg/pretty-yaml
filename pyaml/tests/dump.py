@@ -5,10 +5,12 @@ import itertools as it, operator as op, functools as ft
 from collections import Mapping, OrderedDict
 import os, sys, io, yaml, unittest
 
-sys.path.insert(1, os.path.join(sys.path[0], "..", ".."))
-import pyaml
-
 if sys.version_info.major > 2: unicode = str
+
+try: import pyaml
+except ImportError:
+	sys.path.insert(1, os.path.join(__file__, *['..']*3))
+	import pyaml
 
 
 large_yaml = b'''
