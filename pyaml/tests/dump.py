@@ -215,6 +215,49 @@ data_str_long = dict(cert=(
 	'T1gqPkNEbe2j1DciRNUOH1iuY+cL/b7JqZvvdQK34w3t9Cz7GtMWKo+g+ZRdh3+q'
 	'2sn5m3EkrUb1hSKQbMWTbnaG4C/F3i4KVkH+8AZmR9OvOmZ+7Lo=' ))
 
+# Restore Python2-like heterogeneous list sorting functionality in Python3
+# https://gist.github.com/pR0Ps/1e1a1e892aad5b691448
+def compare(x, y):
+    if x == y:
+        return 0
+    try:
+        # Try native compare
+        if x < y:
+            return -1
+        else:
+            return 1
+    except TypeError as e:
+        # Can't compare the objects natively
+
+        # Special cases for None
+        # The case where both are None is taken care of by the equality test
+        if x is None:
+            return -1
+        elif y is None:
+            return 1
+
+        # If the types are different, compare their type name instead
+        if type(x) != type(y):
+            if type(x).__name__ < type(y).__name__:
+                return -1
+            else:
+                return 1
+
+        # Types are the same but a native compare didn't work.
+        # x and y might be indexable, recursively compare elements
+        lx, ly = len(x), len(y)
+        for i in range(min(lx, ly)):
+            c = compare(x[i], y[i])
+            if c != 0:
+                return c
+
+        # All compared elements are the same, compare based on length
+        if lx == ly:
+            return 0
+        elif lx < ly:
+            return -1
+        else:
+            return 1
 
 class DumpTests(unittest.TestCase):
 
@@ -227,7 +270,7 @@ class DumpTests(unittest.TestCase):
 			for k,v in data.items():
 				dst.extend(self.flatten(v, path + (k,)))
 		else: dst.append((path, data))
-		return tuple(sorted(dst))
+		return tuple(sorted(dst, key=ft.cmp_to_key(compare)))
 
 	def test_dst(self):
 		buff = io.BytesIO()
