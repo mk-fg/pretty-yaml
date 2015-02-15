@@ -3,6 +3,10 @@ pretty-yaml: Pretty YAML serialization
 
 YAML is generally nice an easy format to read *if* it was written by humans.
 
+**IMPORTANT NOTE:** I just discovered allow_unicode=True option for Emitter
+(shameful, I know). It fixes *a lot* of issues with non-ascii stuff, maybe
+consider trying just that one first.
+
 Unfortunately, by default, available serializers seem to not care about that
 aspect, producing correct but less-readable (and format allows for json-style
 crap) and poorly-formatted dumps, hence this simple module.
