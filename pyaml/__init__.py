@@ -156,12 +156,13 @@ def dump( data, dst=unicode, safe=False,
 	if vspacing is not None:
 		dump_add_vspacing(buff, vspacing)
 
-	if dst is bytes:
-		return buff.getvalue()
-	elif dst is unicode:
-		return buff.getvalue().decode('utf-8')
+	buff = buff.getvalue()
+	if dst is bytes: return buff
+	elif dst is unicode: return buff.decode('utf-8')
 	else:
-		dst.write(buff.getvalue())
+		try: dst.write(b'') # tests if dst is unicode- or bytestream
+		except: dst.write(buff.decode('utf-8'))
+		else: dst.write(buff)
 
 def dumps(data, **dump_kws):
 	return dump(data, dst=bytes, **dump_kws)
