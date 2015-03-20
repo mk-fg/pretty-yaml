@@ -1,7 +1,7 @@
-pretty-yaml: Pretty YAML serialization
+pretty-yaml (or pyaml): Pretty YAML serialization
 --------------------
 
-YAML is generally nice an easy format to read *if* it was written by humans.
+YAML is generally nice and easy format to read *if* it was written by humans.
 
 PyYAML can a do fairly decent job of making stuff readable, and the best
 combination of parameters for such output that I've seen so far is probably this one:
