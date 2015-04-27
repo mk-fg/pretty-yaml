@@ -80,10 +80,13 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 			self.expect_node(sequence=True)
 
 	def choose_scalar_style(self):
-		if self.pyaml_string_val_style\
-				and self.states[-1] == self.expect_block_mapping_simple_value:
-			# Don't mess-up styles for dict keys, if possible
-			self.event.style = 'plain'
+		is_dict_key = self.states[-1] == self.expect_block_mapping_simple_value
+		if is_dict_key:
+			# Don't mess-up (replace) styles for dict keys, if possible
+			if self.pyaml_string_val_style: self.event.style = 'plain'
+		else:
+			# Make sure we don't create "key: null" mapping accidentally
+			if self.event.value.endswith(':'): self.event.style = "'"
 		return super(UnsafePrettyYAMLDumper, self).choose_scalar_style()\
 			if self.event.style != 'plain' else ("'" if ' ' in self.event.value else None)
 

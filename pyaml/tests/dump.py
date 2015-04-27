@@ -214,6 +214,7 @@ data_str_long = dict(cert=(
 	'T1gqPkNEbe2j1DciRNUOH1iuY+cL/b7JqZvvdQK34w3t9Cz7GtMWKo+g+ZRdh3+q'
 	'2sn5m3EkrUb1hSKQbMWTbnaG4C/F3i4KVkH+8AZmR9OvOmZ+7Lo=' ))
 
+
 # Restore Python2-like heterogeneous list sorting functionality in Python3
 # Based on https://gist.github.com/pR0Ps/1e1a1e892aad5b691448
 def compare(x, y):
@@ -237,6 +238,7 @@ def compare(x, y):
 			if c != 0: return c
 
 		return compare(len(x), len(y))
+
 
 class DumpTests(unittest.TestCase):
 
@@ -341,6 +343,16 @@ class DumpTests(unittest.TestCase):
 		self.assertNotEqual(a, b)
 		self.assertTrue(pyaml.dump('waka waka', string_val_style='|').startswith('|-\n'))
 		self.assertEqual(pyaml.dump(dict(a=1), string_val_style='|'), 'a: 1\n')
+
+	def test_colons_in_strings(self):
+		val1 = {'foo': ['bar:', 'baz', 'bar:bazzo', 'a: b'], 'foo:': 'yak:'}
+		val1_str = pyaml.dump(val1)
+		val2 = yaml.load(val1_str)
+		val2_str = pyaml.dump(val2)
+		val3 = yaml.load(val2_str)
+		self.assertEqual(val1, val2)
+		self.assertEqual(val1_str, val2_str)
+		self.assertEqual(val2, val3)
 
 
 if __name__ == '__main__':
