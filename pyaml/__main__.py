@@ -12,7 +12,7 @@ def main(argv=None):
 	opts = parser.parse_args(argv or sys.argv[1:])
 
 	src = open(opts.path) if opts.path else sys.stdin
-	try: data = yaml.load(src)
+	try: data = yaml.safe_load(src)
 	finally: src.close()
 
 	pyaml.pprint(data)

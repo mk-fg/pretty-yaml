@@ -262,13 +262,13 @@ class DumpTests(unittest.TestCase):
 	def test_simple(self):
 		a = self.flatten(data)
 		b = pyaml.dump(data, unicode)
-		self.assertEqual(a, self.flatten(yaml.load(b)))
+		self.assertEqual(a, self.flatten(yaml.safe_load(b)))
 
 	def test_vspacing(self):
-		data = yaml.load(large_yaml)
+		data = yaml.safe_load(large_yaml)
 		a = self.flatten(data)
 		b = pyaml.dump(data, unicode, vspacing=[2, 1])
-		self.assertEqual(a, self.flatten(yaml.load(b)))
+		self.assertEqual(a, self.flatten(yaml.safe_load(b)))
 		pos, pos_list = 0, list()
 		while True:
 			pos = b.find(u'\n', pos+1)
@@ -347,9 +347,9 @@ class DumpTests(unittest.TestCase):
 	def test_colons_in_strings(self):
 		val1 = {'foo': ['bar:', 'baz', 'bar:bazzo', 'a: b'], 'foo:': 'yak:'}
 		val1_str = pyaml.dump(val1)
-		val2 = yaml.load(val1_str)
+		val2 = yaml.safe_load(val1_str)
 		val2_str = pyaml.dump(val2)
-		val3 = yaml.load(val2_str)
+		val3 = yaml.safe_load(val2_str)
 		self.assertEqual(val1, val2)
 		self.assertEqual(val1_str, val2_str)
 		self.assertEqual(val2, val3)
@@ -358,6 +358,6 @@ class DumpTests(unittest.TestCase):
 if __name__ == '__main__':
 	unittest.main()
 	# print('-'*80)
-	# pyaml.dump(yaml.load(large_yaml), sys.stdout)
+	# pyaml.dump(yaml.safe_load(large_yaml), sys.stdout)
 	# print('-'*80)
 	# pyaml.dump(data, sys.stdout)
