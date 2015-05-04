@@ -31,6 +31,8 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 	def represent_undefined(dumper, data):
 		if isinstance(data, tuple) and hasattr(data, '_make') and hasattr(data, '_asdict'):
 			return dumper.represent_odict(data._asdict()) # assuming namedtuple
+		elif isinstance(data, OrderedDict): return dumper.represent_odict(data)
+		elif isinstance(data, dict): return dumper.represent_dict(data)
 		return super(PrettyYAMLDumper, dumper).represent_undefined(data)
 
 	def serialize_node(self, node, parent, index):
