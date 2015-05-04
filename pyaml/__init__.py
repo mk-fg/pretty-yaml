@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, print_function
 
 import itertools as it, operator as op, functools as ft
-from collections import defaultdict, OrderedDict
+from collections import defaultdict, OrderedDict, namedtuple
 import os, sys, io, yaml
 
 if sys.version_info.major > 2: unicode = str
@@ -27,6 +27,11 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 			value.append((node_key, node_value))
 		node.flow_style = False
 		return node
+
+	def represent_undefined(dumper, data):
+		if isinstance(data, tuple) and hasattr(data, '_make') and hasattr(data, '_asdict'):
+			return dumper.represent_odict(data._asdict()) # assuming namedtuple
+		return super(PrettyYAMLDumper, dumper).represent_undefined(data)
 
 	def serialize_node(self, node, parent, index):
 		if self.pyaml_force_embed: self.serialized_nodes.clear()
@@ -59,8 +64,9 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 					self.anchor_node(value, hint=hint+[key])
 
 PrettyYAMLDumper.add_representer(defaultdict, PrettyYAMLDumper.represent_dict)
+PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_dict)
 PrettyYAMLDumper.add_representer(set, PrettyYAMLDumper.represent_list)
-PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_odict)
+PrettyYAMLDumper.add_representer(None, PrettyYAMLDumper.represent_undefined)
 
 
 class UnsafePrettyYAMLDumper(PrettyYAMLDumper):

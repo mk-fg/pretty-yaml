@@ -34,9 +34,9 @@ pyaml tries to improve on that a bit, with the following tweaks:
   strings, which have the same meaning but reduce visual clutter and are easier
   to edit.
 
-* Dicts, sets, OrderedDicts, defaultdicts, etc are representable and get sorted
-  on output, so that output would be as diff-friendly as possible, and not
-  arbitrarily depend on python internals.
+* Dicts, sets, OrderedDicts, defaultdicts, namedtuples, etc are representable
+  and get sorted on output, so that output would be as diff-friendly as
+  possible, and not arbitrarily depend on python internals.
 
   It appears that at least recent PyYAML versions also do such sorting for
   python dicts.

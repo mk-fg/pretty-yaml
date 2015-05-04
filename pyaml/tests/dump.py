@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, print_function
 
 import itertools as it, operator as op, functools as ft
-from collections import Mapping, OrderedDict
+from collections import Mapping, OrderedDict, namedtuple
 import os, sys, io, yaml, unittest
 
 if sys.version_info.major > 2: unicode = str
@@ -353,6 +353,12 @@ class DumpTests(unittest.TestCase):
 		self.assertEqual(val1, val2)
 		self.assertEqual(val1_str, val2_str)
 		self.assertEqual(val2, val3)
+
+	def test_namedtuple(self):
+		TestTuple = namedtuple('TestTuple', 'y x z')
+		val = TestTuple(1, 2, 3)
+		val_str = pyaml.dump(val)
+		self.assertEqual(val_str, u'y: 1\nx: 2\nz: 3\n') # namedtuple order was preserved
 
 
 if __name__ == '__main__':
