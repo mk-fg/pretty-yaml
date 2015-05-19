@@ -207,7 +207,7 @@ Force all string values to a certain style (see info on these in
   pyaml.dump(multiline_words, string_val_style='>')
   pyaml.dump(no_want_quotes, string_val_style='plain')
 
-Using ``pyaml.add_representer()`` (note *p*yaml) as suggested in
+Using ``pyaml.add_representer()`` (note \*p\*yaml) as suggested in
 `this SO thread`_ (or `github issue-7`_) should also work.
 
 .. _PyYAML docs: http://pyyaml.org/wiki/PyYAMLDocumentation#Scalars
