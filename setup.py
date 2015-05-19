@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-import os, io
+import os
 
 pkg_root = os.path.dirname(__file__)
 
 # Error-handling here is to allow package to be built w/o README included
-try: readme = io.open(os.path.join(pkg_root, 'README.rst'), encoding='utf-8').read()
+try: readme = open(os.path.join(pkg_root, 'README.rst')).read()
 except IOError: readme = ''
 
 setup(
 
 	name = 'pyaml',
-	version = '15.5.4',
+	version = '15.5.5',
 	author = 'Mike Kazantsev',
 	author_email = 'mk.fraggod@gmail.com',
 	license = 'WTFPL',
