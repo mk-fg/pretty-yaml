@@ -360,6 +360,11 @@ class DumpTests(unittest.TestCase):
 		val_str = pyaml.dump(val)
 		self.assertEqual(val_str, u'y: 1\nx: 2\nz: 3\n') # namedtuple order was preserved
 
+	def test_ordereddict(self):
+		d = OrderedDict((i, '') for i in reversed(range(10)))
+		lines = pyaml.dump(d).strip().split('\n')
+		assert sorted(lines) == list(reversed(lines))
+
 
 if __name__ == '__main__':
 	unittest.main()
