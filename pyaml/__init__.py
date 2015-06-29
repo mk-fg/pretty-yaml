@@ -66,7 +66,7 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 					self.anchor_node(value, hint=hint+[key])
 
 PrettyYAMLDumper.add_representer(defaultdict, PrettyYAMLDumper.represent_dict)
-PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_dict)
+PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_odict)
 PrettyYAMLDumper.add_representer(set, PrettyYAMLDumper.represent_list)
 PrettyYAMLDumper.add_representer(None, PrettyYAMLDumper.represent_undefined)
 
