@@ -362,8 +362,8 @@ class DumpTests(unittest.TestCase):
 
 	def test_ordereddict(self):
 		d = OrderedDict((i, '') for i in reversed(range(10)))
-		lines = pyaml.dump(d).strip().split('\n')
-		assert sorted(lines) == list(reversed(lines))
+		lines = pyaml.dump(d).splitlines()
+		self.assertEqual(lines, list(reversed(sorted(lines))))
 
 
 if __name__ == '__main__':
