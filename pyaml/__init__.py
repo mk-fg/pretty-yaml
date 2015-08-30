@@ -118,7 +118,7 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 				style = 'literal'
 				if '\n' in data[:-1]:
 					for line in data.splitlines():
-						if len(line) > 120: break
+						if len(line) > dumper.best_width: break
 					else: style = '|'
 
 		return yaml.representer.ScalarNode('tag:yaml.org,2002:str', data, style=style)
