@@ -365,6 +365,14 @@ class DumpTests(unittest.TestCase):
 		lines = pyaml.dump(d).splitlines()
 		self.assertEqual(lines, list(reversed(sorted(lines))))
 
+	def test_pyyaml_params(self):
+		d = {'foo': 'lorem ipsum ' * 30} # 300+ chars
+		for w in 40, 80, 200:
+			lines = pyaml.dump(d, width=w, indent=10).splitlines()
+			for n, line in enumerate(lines, 1):
+				self.assertLess(len(line), w*1.2)
+				if n != len(lines): self.assertGreater(len(line), w*0.8)
+
 
 if __name__ == '__main__':
 	unittest.main()
