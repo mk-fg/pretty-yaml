@@ -1,5 +1,14 @@
-pretty-yaml (or pyaml): Pretty YAML serialization
-=================================================
+pretty-yaml (or pyaml)
+======================
+
+PyYAML-based python module to produce pretty and readable YAML-serialized data.
+
+.. contents::
+  :backlinks: none
+
+
+What this module does and why
+-----------------------------
 
 YAML is generally nice and easy format to read *if* it was written by humans.
 
@@ -189,31 +198,39 @@ welcome!).
 Some Tricks
 -----------
 
-Pretty-print any yaml or json (yaml subset) file from the shell::
+* Pretty-print any yaml or json (yaml subset) file from the shell::
 
-  python -m pyaml /path/to/some/file.yaml
-  curl -s https://status.github.com/api.json | python -m pyaml
+    python -m pyaml /path/to/some/file.yaml
+    curl -s https://status.github.com/api.json | python -m pyaml
 
-Easier "debug printf" for more complex data (all funcs below are aliases to same thing)::
+* Easier "debug printf" for more complex data (all funcs below are aliases to
+  same thing)::
 
-  pyaml.p(stuff)
-  pyaml.pprint(my_data)
-  pyaml.pprint('----- HOW DOES THAT BREAKS!?!?', input_data, some_var, more_stuff)
-  pyaml.print(data, file=sys.stderr) # needs "from __future__ import print_function"
+    pyaml.p(stuff)
+    pyaml.pprint(my_data)
+    pyaml.pprint('----- HOW DOES THAT BREAKS!?!?', input_data, some_var, more_stuff)
+    pyaml.print(data, file=sys.stderr) # needs "from __future__ import print_function"
 
-Force all string values to a certain style (see info on these in
-`PyYAML docs`_)::
+* Force all string values to a certain style (see info on these in
+  `PyYAML docs`_)::
 
-  pyaml.dump(many_weird_strings, string_val_style='|')
-  pyaml.dump(multiline_words, string_val_style='>')
-  pyaml.dump(no_want_quotes, string_val_style='plain')
+    pyaml.dump(many_weird_strings, string_val_style='|')
+    pyaml.dump(multiline_words, string_val_style='>')
+    pyaml.dump(no_want_quotes, string_val_style='plain')
 
-Using ``pyaml.add_representer()`` (note \*p\*yaml) as suggested in
-`this SO thread`_ (or `github issue-7`_) should also work.
+  Using ``pyaml.add_representer()`` (note \*p\*yaml) as suggested in
+  `this SO thread`_ (or `github-issue-7`_) should also work.
+
+* Control indent and width of the results::
+
+    pyaml.dump(wide_and_deep, indent=4, width=120)
+
+  These are actually keywords for PyYAML Emitter (passed to it from Dumper),
+  see more info on these in `PyYAML docs`_.
 
 .. _PyYAML docs: http://pyyaml.org/wiki/PyYAMLDocumentation#Scalars
 .. _this SO thread: http://stackoverflow.com/a/7445560
-.. _github issue-7: https://github.com/mk-fg/pretty-yaml/issues/7
+.. _github-issue-7: https://github.com/mk-fg/pretty-yaml/issues/7
 
 
 Installation
