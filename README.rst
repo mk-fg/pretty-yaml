@@ -264,7 +264,7 @@ Or, if you don't have "pip" command::
 
 On a very old systems, one of these might work::
 
-  % curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python
+  % curl https://bootstrap.pypa.io/get-pip.py | python
   % pip install pyaml
 
   % easy_install pyaml
