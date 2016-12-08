@@ -354,6 +354,16 @@ class DumpTests(unittest.TestCase):
 		self.assertEqual(val1_str, val2_str)
 		self.assertEqual(val2, val3)
 
+	def test_empty_strings(self):
+		val1 = {'key': ['', 'stuff', '', 'more'], '': 'value', 'k3': ''}
+		val1_str = pyaml.dump(val1)
+		val2 = yaml.safe_load(val1_str)
+		val2_str = pyaml.dump(val2)
+		val3 = yaml.safe_load(val2_str)
+		self.assertEqual(val1, val2)
+		self.assertEqual(val1_str, val2_str)
+		self.assertEqual(val2, val3)
+
 	def test_namedtuple(self):
 		TestTuple = namedtuple('TestTuple', 'y x z')
 		val = TestTuple(1, 2, 3)
