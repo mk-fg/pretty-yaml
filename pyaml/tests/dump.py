@@ -364,6 +364,26 @@ class DumpTests(unittest.TestCase):
 		self.assertEqual(val1_str, val2_str)
 		self.assertEqual(val2, val3)
 
+	def test_single_dash_strings(self):
+		strip_seq_dash = lambda line: line.lstrip().lstrip('-').lstrip()
+		val1 = {'key': ['-', '-stuff', '- -', '- more-', 'more-', '--']}
+		val1_str = pyaml.dump(val1)
+		val2 = yaml.safe_load(val1_str)
+		val2_str = pyaml.dump(val2)
+		val3 = yaml.safe_load(val2_str)
+		self.assertEqual(val1, val2)
+		self.assertEqual(val1_str, val2_str)
+		self.assertEqual(val2, val3)
+		val1_str_lines = val1_str.splitlines()
+		self.assertEqual(strip_seq_dash(val1_str_lines[2]), '-stuff')
+		self.assertEqual(strip_seq_dash(val1_str_lines[5]), 'more-')
+		self.assertEqual(strip_seq_dash(val1_str_lines[6]), '--')
+		val1 = {'key': '-'}
+		val1_str = pyaml.dump(val1)
+		val2 = yaml.safe_load(val1_str)
+		val2_str = pyaml.dump(val2)
+		val3 = yaml.safe_load(val2_str)
+
 	def test_namedtuple(self):
 		TestTuple = namedtuple('TestTuple', 'y x z')
 		val = TestTuple(1, 2, 3)
