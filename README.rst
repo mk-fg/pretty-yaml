@@ -7,6 +7,21 @@ PyYAML-based python module to produce pretty and readable YAML-serialized data.
   :backlinks: none
 
 
+Warning
+-------
+
+Prime goal of this module is to produce human-readable output that can be easily
+manipulated and re-used, but maybe with some occasional caveats.
+
+One good example of such "caveat" is that e.g. ``{'foo': '123'}`` will serialize
+to ``foo: 123``, which for PyYAML would be a bug, as 123 will then be read back
+as an integer from that, but here it's a feature.
+
+So please do not rely on the thing to produce output that can always be
+deserialized exactly to what was exported, at least - use PyYAML (e.g. with
+options from the next section) for that.
+
+
 What this module does and why
 -----------------------------
 
@@ -179,20 +194,6 @@ Note that unless there are many moderately wide and deep trees of data, which
 are expected to be read and edited by people, it might be preferrable to
 directly use PyYAML regardless, as it won't introduce another (rather pointless
 in that case) dependency and a point of failure.
-
-
-Obligatory warning
-------------------
-
-Prime concern for this module is to chew *simple* types/values gracefully, and
-internally there are some nasty hacks (that I'm not too proud of) used to do
-that, which may not work with more complex serialization cases, possibly even
-producing non-deserializable (but still easily fixable) output.
-
-Again, prime goal is **not** to serialize, say, gigabytes of complex
-document-storage db contents, but rather individual simple human-parseable
-documents, please keep that in mind (and of course, patches for hacks are
-welcome!).
 
 
 Some Tricks
