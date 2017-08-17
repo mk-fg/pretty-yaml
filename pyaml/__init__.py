@@ -33,6 +33,7 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 			return dumper.represent_odict(data._asdict()) # assuming namedtuple
 		elif isinstance(data, OrderedDict): return dumper.represent_odict(data)
 		elif isinstance(data, dict): return dumper.represent_dict(data)
+		elif callable(getattr(data, 'tolist', None)): return dumper.represent_data(data.tolist())
 		return super(PrettyYAMLDumper, dumper).represent_undefined(data)
 
 	def serialize_node(self, node, parent, index):
