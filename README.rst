@@ -3,6 +3,9 @@ pretty-yaml (or pyaml)
 
 PyYAML-based python module to produce pretty and readable YAML-serialized data.
 
+This module is for serialization only, see `ruamel.yaml`_ module for literate
+YAML parsing (keeping track of comments, spacing, line/column numbers of values, etc).
+
 .. contents::
   :backlinks: none
 
@@ -289,6 +292,7 @@ installs into custom paths.
 
 More info on python packaging can be found at `packaging.python.org`_.
 
+.. _ruamel.yaml: https://bitbucket.org/ruamel/yaml/
 .. _PyYAML: http://pyyaml.org/
 .. _unidecode: http://pypi.python.org/pypi/Unidecode
 .. _pip: http://pip-installer.org/
