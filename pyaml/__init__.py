@@ -3,7 +3,9 @@ from __future__ import unicode_literals, print_function
 
 import itertools as it, operator as op, functools as ft
 from collections import defaultdict, OrderedDict, namedtuple
-import os, sys, io, yaml
+import os, sys, io
+
+import yaml
 
 if sys.version_info.major > 2: unicode = str
 
@@ -70,6 +72,13 @@ PrettyYAMLDumper.add_representer(defaultdict, PrettyYAMLDumper.represent_dict)
 PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_odict)
 PrettyYAMLDumper.add_representer(set, PrettyYAMLDumper.represent_list)
 PrettyYAMLDumper.add_representer(None, PrettyYAMLDumper.represent_undefined)
+
+if sys.version_info.major >= 3:
+	try: import pathlib
+	except ImportError: pass
+	else:
+		PrettyYAMLDumper.add_representer(
+			type(pathlib.Path('')), lambda cls,o: cls.represent_data(str(o)) )
 
 
 class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
