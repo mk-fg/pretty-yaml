@@ -44,9 +44,11 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 
 	@staticmethod
 	def pyaml_transliterate(string):
-		from unidecode import unidecode
+		if not all(ord(c) < 128 for c in string):
+			from unidecode import unidecode
+			string = unidecode(string)
 		string_new = ''
-		for ch in unidecode(string):
+		for ch in string:
 			if '0' <= ch <= '9' or 'A' <= ch <= 'Z' or 'a' <= ch <= 'z' or ch in '-_': string_new += ch
 			else: string_new += '_'
 		return string_new.lower()
