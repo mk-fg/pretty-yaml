@@ -15,6 +15,7 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 	def __init__(self, *args, **kws):
 		self.pyaml_force_embed = kws.pop('force_embed', False)
 		self.pyaml_string_val_style = kws.pop('string_val_style', None)
+		self.pyaml_sort_dicts = kws.pop('sort_dicts', True)
 		return super(PrettyYAMLDumper, self).__init__(*args, **kws)
 
 	def represent_odict(dumper, data):
@@ -37,6 +38,10 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 		elif isinstance(data, dict): return dumper.represent_dict(data)
 		elif callable(getattr(data, 'tolist', None)): return dumper.represent_data(data.tolist())
 		return super(PrettyYAMLDumper, dumper).represent_undefined(data)
+
+	def represent_dict(dumper, data):
+		if not dumper.pyaml_sort_dicts: return dumper.represent_odict(data)
+		return super(PrettyYAMLDumper, dumper).represent_dict(data)
 
 	def serialize_node(self, node, parent, index):
 		if self.pyaml_force_embed: self.serialized_nodes.clear()
@@ -70,6 +75,7 @@ class PrettyYAMLDumper(yaml.dumper.SafeDumper):
 					self.anchor_node(key)
 					self.anchor_node(value, hint=hint+[key])
 
+PrettyYAMLDumper.add_representer(dict, PrettyYAMLDumper.represent_dict)
 PrettyYAMLDumper.add_representer(defaultdict, PrettyYAMLDumper.represent_dict)
 PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_odict)
 PrettyYAMLDumper.add_representer(set, PrettyYAMLDumper.represent_list)
@@ -169,10 +175,12 @@ def dump_add_vspacing(buff, vspacing):
 
 
 def dump( data, dst=unicode, safe=False,
-		force_embed=False, vspacing=None, string_val_style=None, **pyyaml_kws ):
+		force_embed=False, vspacing=None,
+		string_val_style=None, sort_dicts=True, **pyyaml_kws ):
 	buff = io.BytesIO()
 	Dumper = PrettyYAMLDumper if safe else UnsafePrettyYAMLDumper
-	Dumper = ft.partial(Dumper, force_embed=force_embed, string_val_style=string_val_style)
+	Dumper = ft.partial( Dumper,
+		force_embed=force_embed, string_val_style=string_val_style, sort_dicts=sort_dicts )
 	yaml.dump_all( [data], buff, Dumper=Dumper,
 		default_flow_style=False, allow_unicode=True, encoding='utf-8', **pyyaml_kws )
 

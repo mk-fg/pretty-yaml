@@ -104,6 +104,10 @@ pyaml tries to improve on that a bit, with the following tweaks:
     >>> yaml.safe_dump(data, sys.stdout, allow_unicode=True, default_style='"')
     "key": "value\nasldpáknsa\n"
 
+* "sort_dicts=False" option to leave dict item ordering to python, and not
+  force-sort them in yaml output, which can be important for python 3.6+ where
+  they retain ordering info.
+
 * Has an option to add vertical spacing (empty lines) between keys on different
   depths, to make output much more seekable.
 
