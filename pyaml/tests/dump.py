@@ -404,12 +404,19 @@ class DumpTests(unittest.TestCase):
 				if n != len(lines): self.assertGreater(len(line), w*0.8)
 
 	def test_multiple_docs(self):
-		data = yaml.safe_load(large_yaml)
-		doc = pyaml.dump_all([data, dict(a=1, b=2, c=3)], vspacing=[3, 2])
-		self.assertTrue(doc.startswith('---'))
-		self.assertIn('---\n\n\n\na: 1\n\n\n\nb: 2\n\n\n\nc: 3\n', doc)
-		doc = pyaml.dump_all([data, dict(a=1, b=2, c=3)], explicit_start=False)
-		self.assertFalse(doc.startswith('---'))
+		docs = [yaml.safe_load(large_yaml), dict(a=1, b=2, c=3)]
+		docs_str = pyaml.dump_all(docs, vspacing=[3, 2])
+		self.assertTrue(docs_str.startswith('---'))
+		self.assertIn('---\n\n\n\na: 1\n\n\n\nb: 2\n\n\n\nc: 3\n', docs_str)
+		docs_str2 = pyaml.dump(docs, vspacing=[3, 2], multiple_docs=True)
+		self.assertEqual(docs_str, docs_str2)
+		docs_str2 = pyaml.dump(docs, vspacing=[3, 2])
+		self.assertNotEqual(docs_str, docs_str2)
+		docs_str2 = pyaml.dump_all(docs, explicit_start=False)
+		self.assertFalse(docs_str2.startswith('---'))
+		self.assertNotEqual(docs_str, docs_str2)
+		docs_str = pyaml.dump(docs, multiple_docs=True, explicit_start=False)
+		self.assertEqual(docs_str, docs_str2)
 
 
 if __name__ == '__main__':

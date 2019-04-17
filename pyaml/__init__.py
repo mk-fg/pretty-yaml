@@ -175,7 +175,6 @@ def dump_add_vspacing(buff, vspacing):
 
 
 def dump_all(data, *dump_args, **dump_kws):
-	dump_kws.setdefault('explicit_start', True)
 	return dump(data, *dump_args, multiple_docs=True, **dump_kws)
 
 def dump( data, dst=unicode, safe=False, force_embed=False, vspacing=None,
@@ -185,6 +184,7 @@ def dump( data, dst=unicode, safe=False, force_embed=False, vspacing=None,
 	Dumper = ft.partial( Dumper,
 		force_embed=force_embed, string_val_style=string_val_style, sort_dicts=sort_dicts )
 	if not multiple_docs: data = [data]
+	else: pyyaml_kws.setdefault('explicit_start', True)
 	yaml.dump_all( data, buff, Dumper=Dumper,
 		default_flow_style=False, allow_unicode=True, encoding='utf-8', **pyyaml_kws )
 
