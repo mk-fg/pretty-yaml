@@ -236,6 +236,10 @@ Some Tricks
   These are actually keywords for PyYAML Emitter (passed to it from Dumper),
   see more info on these in `PyYAML docs`_.
 
+* Dump multiple yaml documents into a file: ``pyaml.dump_all([data1, data2, data3], dst_file)``
+
+  explicit_start=True is implied, unless explicit_start=False is passed.
+
 .. _PyYAML docs: http://pyyaml.org/wiki/PyYAMLDocumentation#Scalars
 .. _this SO thread: http://stackoverflow.com/a/7445560
 .. _github-issue-7: https://github.com/mk-fg/pretty-yaml/issues/7

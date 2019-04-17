@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import itertools as it, operator as op, functools as ft
 from collections import defaultdict, OrderedDict, namedtuple
-import os, sys, io
+import os, sys, io, re
 
 import yaml
 
@@ -163,7 +163,7 @@ def dump_add_vspacing(buff, vspacing):
 		level = 0
 		line = line.decode('utf-8')
 		result.append(line)
-		if ':' in line:
+		if ':' in line or re.search(r'---(\s*$|\s)', line):
 			while line.startswith('  '):
 				level, line = level + 1, line[2:]
 			if len(vspacing) > level and len(result) != 1:
@@ -174,14 +174,18 @@ def dump_add_vspacing(buff, vspacing):
 	buff.write(''.join(result).encode('utf-8'))
 
 
-def dump( data, dst=unicode, safe=False,
-		force_embed=False, vspacing=None,
-		string_val_style=None, sort_dicts=True, **pyyaml_kws ):
+def dump_all(data, *dump_args, **dump_kws):
+	dump_kws.setdefault('explicit_start', True)
+	return dump(data, *dump_args, multiple_docs=True, **dump_kws)
+
+def dump( data, dst=unicode, safe=False, force_embed=False, vspacing=None,
+		string_val_style=None, sort_dicts=True, multiple_docs=False, **pyyaml_kws ):
 	buff = io.BytesIO()
 	Dumper = PrettyYAMLDumper if safe else UnsafePrettyYAMLDumper
 	Dumper = ft.partial( Dumper,
 		force_embed=force_embed, string_val_style=string_val_style, sort_dicts=sort_dicts )
-	yaml.dump_all( [data], buff, Dumper=Dumper,
+	if not multiple_docs: data = [data]
+	yaml.dump_all( data, buff, Dumper=Dumper,
 		default_flow_style=False, allow_unicode=True, encoding='utf-8', **pyyaml_kws )
 
 	if vspacing is not None:
