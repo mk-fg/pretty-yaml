@@ -208,8 +208,12 @@ Some Tricks
 
 * Pretty-print any yaml or json (yaml subset) file from the shell::
 
-    python -m pyaml /path/to/some/file.yaml
-    curl -s https://status.github.com/api.json | python -m pyaml
+    % python -m pyaml /path/to/some/file.yaml
+    % curl -s https://status.github.com/api.json | python -m pyaml
+
+* Process and replace json/yaml file in-place::
+
+    % python -m pyaml -r file-with-json.data
 
 * Easier "debug printf" for more complex data (all funcs below are aliases to
   same thing)::
