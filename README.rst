@@ -209,7 +209,7 @@ Some Tricks
 * Pretty-print any yaml or json (yaml subset) file from the shell::
 
     % python -m pyaml /path/to/some/file.yaml
-    % curl -s https://status.github.com/api.json | python -m pyaml
+    % curl -s https://www.githubstatus.com/api/v2/summary.json | python -m pyaml
 
 * Process and replace json/yaml file in-place::
 
