@@ -6,6 +6,8 @@ PyYAML-based python module to produce pretty and readable YAML-serialized data.
 This module is for serialization only, see `ruamel.yaml`_ module for literate
 YAML parsing (keeping track of comments, spacing, line/column numbers of values, etc).
 
+[note: to dump stuff parsed by ruamel.yaml with this module, use only ``YAML(typ='safe')`` there]
+
 .. contents::
   :backlinks: none
 
