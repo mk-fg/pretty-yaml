@@ -418,6 +418,12 @@ class DumpTests(unittest.TestCase):
 		docs_str = pyaml.dump(docs, multiple_docs=True, explicit_start=False)
 		self.assertEqual(docs_str, docs_str2)
 
+	def test_ruamel_yaml(self):
+		try: from ruamel.yaml import YAML
+		except ImportError: return unittest.skip('No ruamel.yaml module to test it')
+		data = YAML(typ='safe').load(large_yaml)
+		yaml_str = pyaml.dump(data)
+
 
 if __name__ == '__main__':
 	unittest.main()

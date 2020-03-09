@@ -81,6 +81,11 @@ PrettyYAMLDumper.add_representer(OrderedDict, PrettyYAMLDumper.represent_odict)
 PrettyYAMLDumper.add_representer(set, PrettyYAMLDumper.represent_list)
 PrettyYAMLDumper.add_representer(None, PrettyYAMLDumper.represent_undefined)
 
+try: # compatibility with ruamel.yaml types, if it's around somewhere
+	from ruamel.yaml.compat import ordereddict
+	PrettyYAMLDumper.add_representer(ordereddict, PrettyYAMLDumper.represent_odict)
+except ImportError: pass
+
 if sys.version_info.major >= 3:
 	try: import pathlib
 	except ImportError: pass
