@@ -2,11 +2,13 @@
 from __future__ import unicode_literals, print_function
 
 import itertools as it, operator as op, functools as ft
-from collections import OrderedDict, namedtuple
-from collections.abc import Mapping
 import os, sys, io, yaml, unittest
 
-if sys.version_info.major > 2: unicode = str
+if sys.version_info.major > 2:
+	from collections import OrderedDict, namedtuple
+	from collections.abc import Mapping
+	unicode = str
+else: from collections import Mapping, OrderedDict, namedtuple
 
 try: import pyaml
 except ImportError:
