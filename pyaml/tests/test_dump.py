@@ -362,6 +362,7 @@ class DumpTests(unittest.TestCase):
 		val1_str = pyaml.dump(val1)
 		val2 = yaml.safe_load(val1_str)
 		self.assertEqual(val1, val2)
+		self.assertIn('key: word1 word2 word3', val1_str)
 
 	def test_empty_strings(self):
 		val1 = {'key': ['', 'stuff', '', 'more'], '': 'value', 'k3': ''}
