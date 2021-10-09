@@ -105,7 +105,12 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 			self.states.append(self.expect_block_sequence_item)
 			self.expect_node(sequence=True)
 
-	def choose_scalar_style(self):
+	def check_simple_key(self):
+		res = super(UnsafePrettyYAMLDumper, self).check_simple_key()
+		self.analysis.allow_flow_plain = False # not always-set for keys in newer pyyaml
+		return res
+
+	def choose_scalar_style(self, _re1=re.compile(':(\s|$)')):
 		is_dict_key = self.states[-1] == self.expect_block_mapping_simple_value
 		if is_dict_key:
 			# Don't mess-up (replace) styles for dict keys, if possible
@@ -113,8 +118,13 @@ class UnsafePrettyYAMLDumper(PrettyYAMLDumper):
 		else:
 			# Make sure we don't create "key: null" mapping accidentally
 			if self.event.value.endswith(':'): self.event.style = "'"
-		return super(UnsafePrettyYAMLDumper, self).choose_scalar_style()\
-			if self.event.style != 'plain' else ("'" if ' ' in self.event.value else None)
+		if self.event.style != 'plain':
+			return super(UnsafePrettyYAMLDumper, self).choose_scalar_style()
+		s = self.event.value
+		if s.startswith('- ') or _re1.search(s): return "'"
+		if self.analysis and not self.analysis.allow_flow_plain:
+			# Can be a mapping key - disallow spaces in those
+			if ' ' in s: return "'"
 
 	def represent_stringish(dumper, data):
 		# Will crash on bytestrings with weird chars in them,

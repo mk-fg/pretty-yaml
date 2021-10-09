@@ -357,6 +357,12 @@ class DumpTests(unittest.TestCase):
 		self.assertEqual(val1_str, val2_str)
 		self.assertEqual(val2, val3)
 
+	def test_unqouted_spaces(self):
+		val1 = {'key': 'word1 word2 word3', 'key key': 'asd', 'k3': 'word: stuff'}
+		val1_str = pyaml.dump(val1)
+		val2 = yaml.safe_load(val1_str)
+		self.assertEqual(val1, val2)
+
 	def test_empty_strings(self):
 		val1 = {'key': ['', 'stuff', '', 'more'], '': 'value', 'k3': ''}
 		val1_str = pyaml.dump(val1)
