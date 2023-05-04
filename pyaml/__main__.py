@@ -1,24 +1,33 @@
-# -*- coding: utf-8 -*-
-
-import os, sys, stat, tempfile, contextlib, yaml, pyaml
+import os, sys, stat, tempfile, contextlib
+import yaml, pyaml
 
 
 @contextlib.contextmanager
-def safe_replacement(path, *open_args, **open_kws):
-	path = str(path)
-	try: mode = stat.S_IMODE(os.stat(path).st_mode)
-	except (OSError, IOError): mode = None
+def safe_replacement(path, *open_args, mode=None, xattrs=None, **open_kws):
+	'Context to atomically create/replace file-path in-place unless errors are raised'
+	path, xattrs = str(path), None
+	if mode is None:
+		try: mode = stat.S_IMODE(os.lstat(path).st_mode)
+		except FileNotFoundError: pass
+	if xattrs is None and getattr(os, 'getxattr', None): # MacOS
+		try: xattrs = dict((k, os.getxattr(path, k)) for k in os.listxattr(path))
+		except FileNotFoundError: pass
 	open_kws.update( delete=False,
 		dir=os.path.dirname(path), prefix=os.path.basename(path)+'.' )
+	if not open_args: open_kws.setdefault('mode', 'w')
 	with tempfile.NamedTemporaryFile(*open_args, **open_kws) as tmp:
 		try:
 			if mode is not None: os.fchmod(tmp.fileno(), mode)
+			if xattrs:
+				for k, v in xattrs.items(): os.setxattr(path, k, v)
 			yield tmp
 			if not tmp.closed: tmp.flush()
+			try: os.fdatasync(tmp)
+			except AttributeError: pass # MacOS
 			os.rename(tmp.name, path)
 		finally:
 			try: os.unlink(tmp.name)
-			except (OSError, IOError): pass
+			except FileNotFoundError: pass
 
 
 def main(argv=None):

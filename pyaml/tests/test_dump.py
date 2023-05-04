@@ -1,14 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function
+import os, sys, io, unittest, json, collections as cs
 
-import itertools as it, operator as op, functools as ft
-import os, sys, io, yaml, unittest
-
-if sys.version_info.major > 2:
-	from collections import OrderedDict, namedtuple
-	from collections.abc import Mapping
-	unicode = str
-else: from collections import Mapping, OrderedDict, namedtuple
+import yaml
 
 try: import pyaml
 except ImportError:
@@ -16,7 +8,7 @@ except ImportError:
 	import pyaml
 
 
-large_yaml = b'''
+large_yaml = br'''
 ### Default (baseline) configuration parameters.
 ### DO NOT ever change this config, use -c commandline option instead!
 
@@ -162,18 +154,18 @@ logging: # see http://docs.python.org/library/logging.config.html
 
 data = dict(
 	path='/some/path',
-	query_dump=OrderedDict([
+	query_dump=cs.OrderedDict([
 		('key1', 'тест1'),
 		('key2', 'тест2'),
 		('key3', 'тест3'),
 		('последний', None) ]),
-	ids=OrderedDict(),
+	ids=cs.OrderedDict(),
 	a=[1,None,'asd', 'не-ascii'], b=3.5, c=None,
-	asd=OrderedDict([('b', 1), ('a', 2)]) )
+	asd=cs.OrderedDict([('b', 1), ('a', 2)]) )
 data['query_dump_clone'] = data['query_dump']
 data['ids']['id в уникоде'] = [4, 5, 6]
 data['ids']['id2 в уникоде'] = data['ids']['id в уникоде']
-# data["'asd'\n!\0\1"] =OrderedDict([('b', 1), ('a', 2)]) <-- fails in many ways
+# data["'asd'\n!\0\1"] =cs.OrderedDict([('b', 1), ('a', 2)]) <-- fails in many ways
 
 data_str_multiline = dict(cert=(
 	'-----BEGIN CERTIFICATE-----\n'
@@ -218,59 +210,32 @@ data_str_long = dict(cert=(
 	'2sn5m3EkrUb1hSKQbMWTbnaG4C/F3i4KVkH+8AZmR9OvOmZ+7Lo=' ))
 
 
-# Restore Python2-like heterogeneous list sorting functionality in Python3
-# Based on https://gist.github.com/pR0Ps/1e1a1e892aad5b691448
-def compare(x, y):
-	if x == y: return 0
-	try:
-		if x < y: return -1
-		else: return 1
-
-	except TypeError as e:
-		# The case where both are None is taken care of by the equality test
-		if x is None: return -1
-		elif y is None: return 1
-
-		if type(x) != type(y):
-			return compare(*map(lambda t: type(t).__name__, [x, y]))
-
-		# Types are the same but a native compare didn't work.
-		# x and y might be indexable, recursively compare elements
-		for a, b in zip(x, y):
-			c = compare(a, b)
-			if c != 0: return c
-
-		return compare(len(x), len(y))
-
-
 class DumpTests(unittest.TestCase):
 
 	def flatten(self, data, path=tuple()):
 		dst = list()
 		if isinstance(data, (tuple, list)):
-			for v in data:
-				dst.extend(self.flatten(v, path + (list,)))
-		elif isinstance(data, Mapping):
-			for k,v in data.items():
-				dst.extend(self.flatten(v, path + (k,)))
+			for v in data: dst.extend(self.flatten(v, path + ('!!list',)))
+		elif isinstance(data, dict):
+			for k,v in data.items(): dst.extend(self.flatten(v, path + (k,)))
 		else: dst.append((path, data))
-		return tuple(sorted(dst, key=ft.cmp_to_key(compare)))
+		return tuple(sorted(dst, key=lambda v: json.dumps(v, sort_keys=True)))
 
 	def test_dst(self):
 		buff = io.BytesIO()
 		self.assertIs(pyaml.dump(data, buff), None)
 		self.assertIsInstance(pyaml.dump(data, str), str)
-		self.assertIsInstance(pyaml.dump(data, unicode), unicode)
+		self.assertIsInstance(pyaml.dump(data, bytes), bytes)
 
 	def test_simple(self):
 		a = self.flatten(data)
-		b = pyaml.dump(data, unicode)
+		b = pyaml.dump(data)
 		self.assertEqual(a, self.flatten(yaml.safe_load(b)))
 
 	def test_vspacing(self):
 		data = yaml.safe_load(large_yaml)
 		a = self.flatten(data)
-		b = pyaml.dump(data, unicode, vspacing=[2, 1])
+		b = pyaml.dump(data, vspacing=dict(split_lines=10, split_count=2))
 		self.assertEqual(a, self.flatten(yaml.safe_load(b)))
 		pos, pos_list = 0, list()
 		while True:
@@ -278,50 +243,49 @@ class DumpTests(unittest.TestCase):
 			if pos < 0: break
 			pos_list.append(pos)
 		self.assertEqual( pos_list,
-			[ 12, 13, 25, 33, 53, 74, 89, 108, 158, 185, 265, 300, 345, 346, 356, 376, 400, 426, 427,
-				460, 461, 462, 470, 508, 564, 603, 604, 605, 611, 612, 665, 666, 690, 691, 715, 748,
-				777, 806, 807, 808, 817, 818, 832, 843, 878, 948, 949, 961, 974, 1009, 1032, 1052,
-				1083, 1102, 1123, 1173, 1195, 1234, 1257, 1276, 1300, 1301, 1312, 1325, 1341, 1359,
-				1374, 1375, 1383, 1397, 1413, 1431, 1432, 1453, 1454, 1467, 1468, 1485, 1486, 1487,
-				1498, 1499, 1530, 1531, 1551, 1552, 1566, 1577, 1590, 1591, 1612, 1613, 1614, 1622,
-				1623, 1638, 1648, 1649, 1657, 1658, 1688, 1689, 1698, 1720, 1730 ] )
-		b = pyaml.dump(data, unicode)
+			[12, 13, 25, 33, 52, 73, 88, 107, 157, 184, 264, 299, 344, 345, 355, 375, 399,
+			424, 425, 458, 459, 467, 505, 561, 600, 601, 607, 660, 681, 705, 738, 767, 795,
+			796, 805, 806, 820, 831, 866, 936, 937, 949, 950, 963, 998, 1021, 1041, 1072,
+			1073, 1092, 1113, 1163, 1185, 1224, 1247, 1266, 1290, 1291, 1302, 1315, 1331,
+			1349, 1364, 1365, 1373, 1387, 1403, 1421, 1422, 1440, 1441, 1454, 1455, 1471,
+			1472, 1483, 1511, 1528, 1542, 1553, 1566, 1584, 1585, 1593, 1608, 1618, 1626,
+			1656, 1665, 1686, 1696] )
+		b = pyaml.dump(data, vspacing=False)
 		self.assertNotIn('\n\n', b)
 
 	def test_ids(self):
-		b = pyaml.dump(data, unicode)
+		b = pyaml.dump(data, force_embed=False)
 		self.assertNotIn('&id00', b)
 		self.assertIn('query_dump_clone: *query_dump_clone', b)
-		self.assertIn("'id в уникоде': &ids_-_id2_v_unikode", b) # kinda bug - should be just "id"
+		self.assertIn("id в уникоде: &ids_-_id2_v_unikode", b) # kinda bug - should be just "id"
 
 	def test_force_embed(self):
-		b = pyaml.dump(data, unicode, force_embed=True)
-		c = pyaml.dump(data, unicode, safe=True, force_embed=True)
-		for char, dump in it.product('*&', [b, c]):
-			self.assertNotIn(char, dump)
+		for check, fe in (self.assertNotIn, True), (self.assertIn, False):
+			dump = pyaml.dump(data, force_embed=fe)
+			for c in '*&': check(c, dump)
 
 	def test_encoding(self):
-		b = pyaml.dump(data, unicode, force_embed=True)
-		b_lines = list(map(unicode.strip, b.splitlines()))
+		b = pyaml.dump(data, force_embed=True)
+		b_lines = list(map(str.strip, b.splitlines()))
 		chk = ['query_dump:', 'key1: тест1', 'key2: тест2', 'key3: тест3', 'последний:']
 		pos = b_lines.index('query_dump:')
 		self.assertEqual(b_lines[pos:pos + len(chk)], chk)
 
 	def test_str_long(self):
-		b = pyaml.dump(data_str_long, unicode)
+		b = pyaml.dump(data_str_long)
 		self.assertNotIn('"', b)
 		self.assertNotIn("'", b)
 		self.assertEqual(len(b.splitlines()), 1)
 
 	def test_str_multiline(self):
-		b = pyaml.dump(data_str_multiline, unicode)
+		b = pyaml.dump(data_str_multiline)
 		b_lines = b.splitlines()
 		self.assertGreater(len(b_lines), len(data_str_multiline['cert'].splitlines()))
 		for line in b_lines: self.assertLess(len(line), 100)
 
 	def test_dumps(self):
 		b = pyaml.dumps(data_str_multiline)
-		self.assertIsInstance(b, bytes)
+		self.assertIsInstance(b, str)
 
 	def test_print(self):
 		self.assertIs(pyaml.print, pyaml.pprint)
@@ -395,14 +359,14 @@ class DumpTests(unittest.TestCase):
 		val3 = yaml.safe_load(val2_str)
 
 	def test_namedtuple(self):
-		TestTuple = namedtuple('TestTuple', 'y x z')
+		TestTuple = cs.namedtuple('TestTuple', 'y x z')
 		val = TestTuple(1, 2, 3)
-		val_str = pyaml.dump(val)
+		val_str = pyaml.dump(val, sort_keys=False)
 		self.assertEqual(val_str, u'y: 1\nx: 2\nz: 3\n') # namedtuple order was preserved
 
 	def test_ordereddict(self):
-		d = OrderedDict((i, '') for i in reversed(range(10)))
-		lines = pyaml.dump(d).splitlines()
+		d = cs.OrderedDict((i, '') for i in reversed(range(10)))
+		lines = pyaml.dump(d, sort_keys=False).splitlines()
 		self.assertEqual(lines, list(reversed(sorted(lines))))
 
 	def test_pyyaml_params(self):
@@ -415,12 +379,14 @@ class DumpTests(unittest.TestCase):
 
 	def test_multiple_docs(self):
 		docs = [yaml.safe_load(large_yaml), dict(a=1, b=2, c=3)]
-		docs_str = pyaml.dump_all(docs, vspacing=[3, 2])
+		docs_str = pyaml.dump_all(docs, vspacing=True)
 		self.assertTrue(docs_str.startswith('---'))
-		self.assertIn('---\n\n\n\na: 1\n\n\n\nb: 2\n\n\n\nc: 3\n', docs_str)
-		docs_str2 = pyaml.dump(docs, vspacing=[3, 2], multiple_docs=True)
+		self.assertIn('---\n\na: 1\n\nb: 2\n\nc: 3\n', docs_str)
+
+
+		docs_str2 = pyaml.dump(docs, vspacing=True, multiple_docs=True)
 		self.assertEqual(docs_str, docs_str2)
-		docs_str2 = pyaml.dump(docs, vspacing=[3, 2])
+		docs_str2 = pyaml.dump(docs, vspacing=True)
 		self.assertNotEqual(docs_str, docs_str2)
 		docs_str2 = pyaml.dump_all(docs, explicit_start=False)
 		self.assertFalse(docs_str2.startswith('---'))
