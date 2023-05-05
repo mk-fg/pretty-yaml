@@ -5,6 +5,7 @@ import yaml
 
 class PYAMLDumper(yaml.dumper.SafeDumper):
 
+	class str_ext(str): __slots__ = 'ext',
 	pyaml_anchor_decode = None # imported from unidecode module when needed
 
 	def __init__(self, *args, **kws):
@@ -58,17 +59,20 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 
 	def check_simple_key(self):
 		res = super().check_simple_key()
-		self.analysis.allow_flow_plain = False
+		if self.analysis: self.analysis.allow_flow_plain = False
 		return res
 
 	def choose_scalar_style(self, _re1=re.compile(r':(\s|$)')):
 		if self.states[-1] == self.expect_block_mapping_simple_value:
-			# Don't override string style for dict keys
+			# Mapping keys - disable overriding string style, strip comments
 			if self.pyaml_string_val_style: self.event.style = 'plain'
+			if isinstance(self.analysis.scalar, self.str_ext):
+				self.analysis.scalar = str(self.event.value)
 		# Do default thing for complicated stuff
 		if self.event.style != 'plain': return super().choose_scalar_style()
 		# Make sure style isn't overidden for strings like list/mapping items
 		if (s := self.event.value).startswith('- ') or _re1.search(s): return "'"
+		# Returned style=None picks write_plain in Emitter.process_scalar
 
 	def write_indicator(self, indicator, *args, **kws):
 		if indicator == '...': return # presumably it's useful somewhere, but don't care
@@ -88,7 +92,10 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 			return self.represent_dict(data._asdict()) # assuming namedtuple
 		if isinstance(data, cs.abc.Mapping): return self.represent_dict(data) # dict-like
 		if type(data).__class__.__module__ == 'enum':
-			return self.represent_data(data.value) # enum to int and such
+			node = self.represent_data(data.value)
+			node.value = self.str_ext(node.value)
+			node.value.ext = f'# {str(data)}'
+			return node
 		if hasattr(type(data), '__dataclass_fields__'):
 			try: import dataclasses as dcs
 			except ImportError: pass # can still be something else
@@ -98,6 +105,14 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 		except: pass # can raise other errors with custom types
 		else: return self.represent_data(data.tolist())
 		return super().represent_undefined(data) # will raise RepresenterError
+
+	def write_ext(self, func, text, *args, **kws):
+		# Emitter write-funcs extension to append comments to values
+		getattr(super(), f'write_{func}')(text, *args, **kws)
+		if ext := getattr(text, 'ext', None): super().write_plain(ext)
+	write_folded = lambda s,v,*a,**kw: s.write_ext('folded', v, *a, **kw)
+	write_literal = lambda s,v,*a,**kw: s.write_ext('literal', v, *a, **kw)
+	write_plain = lambda s,v,*a,**kw: s.write_ext('plain', v, *a, **kw)
 
 
 # Unsafe was a separate class in <23.x versions, left here for compatibility

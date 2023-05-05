@@ -389,11 +389,14 @@ class DumpTests(unittest.TestCase):
 
 	def test_enum(self):
 		c = test_const.heartbeat
-		d1 = dict(a=c, b=c.value)
+		d1 = {'a': c, 'b': c.value, c: 'testx'}
 		self.assertEqual(d1['a'], d1['b'])
-		d2 = yaml.safe_load(pyaml.dump(d1))
+		s = pyaml.dump(d1)
+		d2 = yaml.safe_load(s)
 		self.assertEqual(d1['a'], d2['a'])
 		self.assertEqual(d1['a'], c)
+		self.assertEqual(d1[c], 'testx')
+		self.assertIn('a: 123 # test_const.heartbeat', s)
 
 	def test_pyyaml_params(self):
 		d = {'foo': 'lorem ipsum ' * 30} # 300+ chars
