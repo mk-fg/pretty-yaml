@@ -70,8 +70,8 @@ pyaml (this module) tries to improve on that a bit, with the following tweaks:
 
 * Use shorter and simplier yes/no for booleans.
 
-* Dicts, sets, OrderedDicts, defaultdicts, namedtuples, etc are representable
-  and key-sorted by default, for more diff-friendly output.
+* Dicts, sets, OrderedDicts, defaultdicts, namedtuples, enums, etc are
+  representable, with mappings key-sorted by default for more diff-friendly output.
 
 * List items get indented, as they should be.
 

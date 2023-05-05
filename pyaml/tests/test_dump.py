@@ -1,4 +1,4 @@
-import os, sys, io, unittest, json, collections as cs
+import os, sys, io, unittest, json, enum, collections as cs
 
 import yaml
 
@@ -152,6 +152,10 @@ logging: # see http://docs.python.org/library/logging.config.html
     handlers: [console]
 '''
 
+class test_const(enum.IntEnum):
+	dispatch = 2455
+	heartbeat = 123
+
 data = dict(
 	path='/some/path',
 	query_dump=cs.OrderedDict([
@@ -160,7 +164,7 @@ data = dict(
 		('key3', 'тест3'),
 		('последний', None) ]),
 	ids=cs.OrderedDict(),
-	a=[1,None,'asd', 'не-ascii'], b=3.5, c=None,
+	a=[1,None,'asd', 'не-ascii'], b=3.5, c=None, d=test_const.dispatch,
 	asd=cs.OrderedDict([('b', 1), ('a', 2)]) )
 data['query_dump_clone'] = data['query_dump']
 data['ids']['id в уникоде'] = [4, 5, 6]
@@ -382,6 +386,14 @@ class DumpTests(unittest.TestCase):
 		d = cs.OrderedDict((i, '') for i in reversed(range(10)))
 		lines = pyaml.dump(d, sort_keys=False).splitlines()
 		self.assertEqual(lines, list(reversed(sorted(lines))))
+
+	def test_enum(self):
+		c = test_const.heartbeat
+		d1 = dict(a=c, b=c.value)
+		self.assertEqual(d1['a'], d1['b'])
+		d2 = yaml.safe_load(pyaml.dump(d1))
+		self.assertEqual(d1['a'], d2['a'])
+		self.assertEqual(d1['a'], c)
 
 	def test_pyyaml_params(self):
 		d = {'foo': 'lorem ipsum ' * 30} # 300+ chars
