@@ -139,10 +139,11 @@ def dump( data, dst=str, safe=None, force_embed=True, vspacing=True,
 	'Serialize data as pretty-YAML to either specified dst file-like object, or str/bytes'
 	if safe is not None:
 		warnings.warn( 'pyaml module "safe" arg/keyword'
-			' is ignored as implicit safe=True, as of pyaml >= 23.x' )
+			' is ignored as implicit safe=False, as of pyaml >= 23.x', stacklevel=2 )
 	if sort_dicts is not None:
-		warnings.warn( 'pyaml module "sort_dicts" arg/keyword'
-			' is ignored as of pyaml >= 23.x - translated to sort_keys pyaml keyword' )
+		warnings.warn( 'pyaml module "sort_dicts" arg/keyword is deprecated as of'
+				' pyaml >= 23.x - translated to sort_keys PyYAML keyword, use that instead',
+			DeprecationWarning, stacklevel=2 )
 
 	buff = io.StringIO()
 	Dumper = lambda *a,**kw: PYAMLDumper( *a, **kw,
