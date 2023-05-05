@@ -82,14 +82,17 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 	def represent_undefined(self, data):
 		if isinstance(data, tuple) and hasattr(data, '_make') and hasattr(data, '_asdict'):
 			return self.represent_dict(data._asdict()) # assuming namedtuple
-		elif isinstance(data, cs.abc.Mapping): return self.represent_dict(data) # dict-like
-		elif type(data).__class__.__module__ == 'enum':
+		if isinstance(data, cs.abc.Mapping): return self.represent_dict(data) # dict-like
+		if type(data).__class__.__module__ == 'enum':
 			return self.represent_data(data.value) # enum to int and such
-		else:
-			try: # this is for numpy arrays, and the likes
-				if not callable(getattr(data, 'tolist', None)): raise AttributeError
-			except: pass # can raise other errors with custom types
-			else: return self.represent_data(data.tolist())
+		if hasattr(type(data), '__dataclass_fields__'):
+			try: import dataclasses as dcs
+			except ImportError: pass # can still be something else
+			else: return self.represent_dict(dcs.asdict(data))
+		try: # this is for numpy arrays, and the likes
+			if not callable(getattr(data, 'tolist', None)): raise AttributeError
+		except: pass # can raise other errors with custom types
+		else: return self.represent_data(data.tolist())
 		return super().represent_undefined(data) # will raise RepresenterError
 
 
