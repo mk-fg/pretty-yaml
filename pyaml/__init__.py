@@ -70,6 +70,10 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 		# Make sure style isn't overidden for strings like list/mapping items
 		if (s := self.event.value).startswith('- ') or _re1.search(s): return "'"
 
+	def write_indicator(self, indicator, *args, **kws):
+		if indicator == '...': return # presumably it's useful somewhere, but don't care
+		super().write_indicator(indicator, *args, **kws)
+
 	def represent_str(self, data):
 		if not (style := self.pyaml_string_val_style):
 			if '\n' in data[:-1]:

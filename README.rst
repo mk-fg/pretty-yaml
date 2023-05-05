@@ -68,11 +68,11 @@ pyaml (this module) tries to improve on that a bit, with the following tweaks:
 * Dump "null" values as empty values, if possible, which have the same meaning
   but reduce visual clutter and are easier to edit.
 
-* Use shorter and simplier yes/no for booleans.
-
 * Dicts, sets, OrderedDicts, defaultdicts, namedtuples, enums, dataclasses, etc
   are represented as their safe YAML-compatible base (like int, list or mapping),
   with mappings key-sorted by default for more diff-friendly output.
+
+* Use shorter and simplier yes/no for booleans.
 
 * List items get indented, as they should be.
 
@@ -110,6 +110,8 @@ pyaml (this module) tries to improve on that a bit, with the following tweaks:
 
 * Add vertical spacing (empty lines) between keys on different depths,
   to separate long YAML sections in the output visually, make it more seekable.
+
+* Discard end-of-document "..." indicators for simple values.
 
 Result for the (rather meaningless) example above::
 
