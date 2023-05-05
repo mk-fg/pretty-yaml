@@ -302,14 +302,28 @@ class DumpTests(unittest.TestCase):
 		pyaml.print(*args, file=buff)
 		self.assertEqual(b, buff.getvalue())
 
-	def test_str_style_pick(self):
+	def test_str_styles(self):
 		a = pyaml.dump(data_str_multiline)
 		b = pyaml.dump(data_str_multiline, string_val_style='|')
 		self.assertEqual(a, b)
 		b = pyaml.dump(data_str_multiline, string_val_style='plain')
 		self.assertNotEqual(a, b)
+		c = pyaml.dump(data_str_multiline, string_val_style='literal')
+		self.assertNotEqual(c, a)
+		self.assertNotEqual(c, b)
 		self.assertTrue(pyaml.dump('waka waka', string_val_style='|').startswith('|-\n'))
-		self.assertEqual(pyaml.dump(dict(a=1), string_val_style='|'), 'a: 1\n')
+
+		a = pyaml.dump(data_int := dict(a=123))
+		self.assertEqual(a, 'a: 123\n')
+		self.assertEqual(pyaml.dump(data_int, string_val_style='|'), a)
+		self.assertEqual(pyaml.dump(data_int, string_val_style='literal'), a)
+
+		a = pyaml.dump(data_str := dict(a='123'))
+		b = pyaml.dump(data_str, string_val_style='|')
+		self.assertEqual(a, "a: '123'\n")
+		self.assertEqual(self.flatten(data_str), self.flatten(yaml.safe_load(a)))
+		self.assertNotEqual(a, b)
+		self.assertEqual(self.flatten(data_str), self.flatten(yaml.safe_load(b)))
 
 	def test_colons_in_strings(self):
 		val1 = {'foo': ['bar:', 'baz', 'bar:bazzo', 'a: b'], 'foo:': 'yak:'}

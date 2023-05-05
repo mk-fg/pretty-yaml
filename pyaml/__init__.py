@@ -138,8 +138,9 @@ def dump( data, dst=str, safe=None, force_embed=True, vspacing=True,
 		string_val_style=None, sort_dicts=None, multiple_docs=False, **pyyaml_kws ):
 	'Serialize data as pretty-YAML to either specified dst file-like object, or str/bytes'
 	if safe is not None:
-		warnings.warn( 'pyaml module "safe" arg/keyword'
-			' is ignored as implicit safe=False, as of pyaml >= 23.x', stacklevel=2 )
+		cat = DeprecationWarning if not safe else UserWarning
+		warnings.warn( 'pyaml module "safe" arg/keyword is ignored as implicit'
+			' safe=maybe-true?, as of pyaml >= 23.x', category=cat, stacklevel=2 )
 	if sort_dicts is not None:
 		warnings.warn( 'pyaml module "sort_dicts" arg/keyword is deprecated as of'
 				' pyaml >= 23.x - translated to sort_keys PyYAML keyword, use that instead',
@@ -174,6 +175,8 @@ def dump( data, dst=str, safe=None, force_embed=True, vspacing=True,
 		else: dst.write(buff.encode())
 
 
+# Simplier pyaml.dump() aliases
+
 def dump_all(data, *dump_args, **dump_kws):
 	return dump(data, *dump_args, multiple_docs=True, **dump_kws)
 
@@ -186,4 +189,4 @@ def pprint(*data, **dump_kws):
 	dump(data, dst=dst, **dump_kws)
 
 p, _p = pprint, print
-print = pprint # pyaml.print() won't work without "from __future__ import print_function"
+print = pprint

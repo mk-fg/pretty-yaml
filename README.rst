@@ -6,7 +6,10 @@ PyYAML_-based python module to produce a bit more pretty and human-readable YAML
 This module is for serialization only, see `ruamel.yaml`_ module for literate
 YAML parsing (keeping track of comments, spacing, line/column numbers of values, etc).
 
-[side-note: to dump stuff parsed by ruamel.yaml with this module, use only ``YAML(typ='safe')`` there]
+(side-note: to dump stuff parsed by ruamel.yaml with this module, use only ``YAML(typ='safe')`` there)
+
+It's a small module, and for projects that only need part of its functionality,
+I'd recommend copy-pasting that in, instead of adding janky dependency.
 
 .. _PyYAML: http://pyyaml.org/
 .. _ruamel.yaml: https://bitbucket.org/ruamel/yaml/
@@ -24,12 +27,8 @@ Repository URLs:
 Warning
 -------
 
-Prime goal of this module is to produce human-readable output that can be easily
-manipulated and re-used, but maybe with some occasional caveats.
-
-One good example of such "caveat" is that e.g. ``{'foo': '123'}`` might serialize
-to ``foo: 123``, which for PyYAML would be a bug, as 123 will then be read back
-as an integer from that, but here it's a feature.
+Prime goal of this module is to produce human-readable output that can be
+easily diff'ed, manipulated and re-used, but maybe with occasional issues.
 
 So please do not rely on the thing to produce output that can always be
 deserialized exactly to what was exported, at least - use PyYAML directly
@@ -198,10 +197,10 @@ Extended example::
         - console
       level: custom
 
-Note that unless there are many moderately wide and deep trees of data, which
-are expected to be read and edited by people, it might be preferrable to
-directly use PyYAML regardless, as it won't introduce another (rather pointless
-in that case) dependency and a point of failure.
+Note that unless there are many moderately wide and deep trees of data,
+which are expected to be read and edited by people, it might be preferrable
+to directly use PyYAML regardless, as it won't introduce another
+(rather pointless in that case) dependency and a point of failure.
 
 
 Some Tricks
