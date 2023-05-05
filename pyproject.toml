@@ -15,7 +15,7 @@ classifiers = [
 	"Topic :: Software Development",
 	"Topic :: Software Development :: Libraries :: Python Modules",
 	"Topic :: Utilities" ]
-keywords = ["yaml", "serialization", "pretty", "print", "format", "human", "readability"]
+keywords = ["yaml", "serialization", "pretty-print", "formatter", "human", "readability"]
 
 dependencies = ["PyYAML"]
 dynamic = ["readme"]

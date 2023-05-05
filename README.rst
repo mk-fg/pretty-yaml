@@ -6,13 +6,19 @@ PyYAML_-based python module to produce a bit more pretty and human-readable YAML
 This module is for serialization only, see `ruamel.yaml`_ module for literate
 YAML parsing (keeping track of comments, spacing, line/column numbers of values, etc).
 
-[side-note: to dump stuff parsed by ruamel.yaml with this module, use only ``YAML(typ='safe')``]
+[side-note: to dump stuff parsed by ruamel.yaml with this module, use only ``YAML(typ='safe')`` there]
 
 .. _PyYAML: http://pyyaml.org/
 .. _ruamel.yaml: https://bitbucket.org/ruamel/yaml/
 
 .. contents::
   :backlinks: none
+
+Repository URLs:
+
+- https://github.com/mk-fg/pretty-yaml
+- https://codeberg.org/mk-fg/pretty-yaml
+- https://fraggod.net/code/git/pretty-yaml
 
 
 Warning
@@ -124,7 +130,7 @@ Result for the (rather meaningless) example above::
 
   mb: *ma
 
-(force_embed enabled deduplication with ``&ma`` anchor,
+(force_embed=False enabled deduplication with ``&ma`` anchor,
 vspacing is adjusted to split even this tiny output)
 
 ----------
@@ -245,7 +251,7 @@ Some Tricks
 Installation
 ------------
 
-It's a regular python module/package.
+It's a regular python module/package, published on PyPI (as pyaml_).
 
 Module uses PyYAML_ for processing of the actual YAML files
 and should pull it in as a dependency.
@@ -275,6 +281,7 @@ More general info on python packaging can be found at `packaging.python.org`_.
 When changing code, unit tests can be run with ``python -m unittest discover``
 from the local repository checkout.
 
+.. _pyaml: https://pypi.org/project/pyaml/
 .. _unidecode: https://pypi.python.org/pypi/Unidecode
 .. _pip: https://pip.pypa.io/en/stable/
 .. _venv: https://docs.python.org/3/library/venv.html
