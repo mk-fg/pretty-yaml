@@ -267,7 +267,10 @@ pip will default to installing into currently-active venv, then user's home
 directory (under ``~/.local/lib/python...``), and maybe system-wide when running
 as root (only useful in specialized environments like docker containers).
 
-More info on python packaging can be found at `packaging.python.org`_.
+There are many other python packaging tools - pipenv_, poetry_, pdm_, etc -
+use whatever is most suitable for specific project/environment.
+
+More general info on python packaging can be found at `packaging.python.org`_.
 
 When changing code, unit tests can be run with ``python -m unittest discover``
 from the local repository checkout.
@@ -275,4 +278,7 @@ from the local repository checkout.
 .. _unidecode: https://pypi.python.org/pypi/Unidecode
 .. _pip: https://pip.pypa.io/en/stable/
 .. _venv: https://docs.python.org/3/library/venv.html
+.. _poetry: https://python-poetry.org/
+.. _pipenv: https://pipenv.pypa.io/
+.. _pdm: https://pdm.fming.dev/
 .. _packaging.python.org: https://packaging.python.org/installing/

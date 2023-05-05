@@ -1,0 +1,27 @@
+[project]
+
+name = "pyaml"
+version = "23.05.05"
+
+description = "PyYAML-based module to produce a bit more pretty and readable YAML-serialized data"
+authors = [{name="Mike Kazantsev", email="mk.fraggod@gmail.com"}]
+license = {text="WTFPL"}
+classifiers = [
+	"Development Status :: 4 - Beta",
+	"Intended Audience :: Developers",
+	"License :: Public Domain",
+	"Programming Language :: Python",
+	"Programming Language :: Python :: 3.6",
+	"Topic :: Software Development",
+	"Topic :: Software Development :: Libraries :: Python Modules",
+	"Topic :: Utilities" ]
+keywords = ["yaml", "serialization", "pretty", "print", "format", "human", "readability"]
+
+dependencies = ["PyYAML"]
+dynamic = ["readme"]
+
+[tool.setuptools.dynamic]
+readme = {file="README.rst"}
+
+[project.optional-dependencies]
+anchors = ["unidecode"]

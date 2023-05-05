@@ -1,5 +1,3 @@
-# import itertools as it, operator as op, functools as ft
-
 import os, sys, io, re, string, warnings, pathlib, collections as cs
 
 import yaml
