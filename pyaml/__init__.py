@@ -94,7 +94,7 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 		if type(data).__class__.__module__ == 'enum':
 			node = self.represent_data(data.value)
 			node.value = self.str_ext(node.value)
-			node.value.ext = f'# {str(data)}'
+			node.value.ext = f'# {data.__class__.__name__}.{data.name}'
 			return node
 		if hasattr(type(data), '__dataclass_fields__'):
 			try: import dataclasses as dcs

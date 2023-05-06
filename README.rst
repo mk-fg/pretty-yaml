@@ -269,7 +269,7 @@ Using pip_ is how you generally install it, usually coupled with venv_ usage
 
 Current-git version can be installed like this::
 
-  % pip install 'git+https://github.com/mk-fg/pretty-yaml'
+  % pip install git+https://github.com/mk-fg/pretty-yaml
 
 pip will default to installing into currently-active venv, then user's home
 directory (under ``~/.local/lib/python...``), and maybe system-wide when running
