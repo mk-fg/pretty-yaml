@@ -1,7 +1,7 @@
 [project]
 
 name = "pyaml"
-version = "23.05.08"
+version = "23.5.9"
 
 description = "PyYAML-based module to produce a bit more pretty and readable YAML-serialized data"
 authors = [{name="Mike Kazantsev", email="mk.fraggod@gmail.com"}]
@@ -11,12 +11,13 @@ classifiers = [
 	"Intended Audience :: Developers",
 	"License :: Public Domain",
 	"Programming Language :: Python",
-	"Programming Language :: Python :: 3.6",
+	"Programming Language :: Python :: 3.8",
 	"Topic :: Software Development",
 	"Topic :: Software Development :: Libraries :: Python Modules",
 	"Topic :: Utilities" ]
 keywords = ["yaml", "serialization", "pretty-print", "formatter", "human", "readability"]
 
+requires-python = ">=3.8"
 dependencies = ["PyYAML"]
 dynamic = ["readme"]
 

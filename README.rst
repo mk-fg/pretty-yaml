@@ -253,7 +253,7 @@ Some Tricks
 Installation
 ------------
 
-It's a regular python module/package, published on PyPI (as pyaml_).
+It's a regular Python 3.8+ module/package, published on PyPI (as pyaml_).
 
 Module uses PyYAML_ for processing of the actual YAML files
 and should pull it in as a dependency.
