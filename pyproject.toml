@@ -1,7 +1,7 @@
 [project]
 
 name = "pyaml"
-version = "23.5.9"
+version = "23.7.0"
 
 description = "PyYAML-based module to produce a bit more pretty and readable YAML-serialized data"
 authors = [{name="Mike Kazantsev", email="mk.fraggod@gmail.com"}]
@@ -20,6 +20,9 @@ keywords = ["yaml", "serialization", "pretty-print", "formatter", "human", "read
 requires-python = ">=3.8"
 dependencies = ["PyYAML"]
 dynamic = ["readme"]
+
+[project.urls]
+Homepage = "https://github.com/mk-fg/pretty-yaml"
 
 [tool.setuptools.dynamic]
 readme = {file="README.rst"}
