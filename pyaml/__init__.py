@@ -141,18 +141,17 @@ def dump_add_vspacing(yaml_str, split_lines=40, split_count=2):
 		a = a_seq = ind_re = ind_item = None
 		blocks, item_lines = list(), list()
 		for n, line in enumerate(lines):
-			if ind_item is None and (m := re.match('( *)([^# ].?)', line)):
+			if ind_item is None and (m := re.match(r'( *)([^# ].?)', line)):
 				ind_item = m[1]; lines.append(f'{ind_item}.') # for last add_vspacing
 			if ind_re:
 				if ind_re.match(line): continue
 				if n - a > split_lines and (block := lines[a:n]):
 					if a_seq: block.insert(0, lines[a-1].replace('- ', '  ', 1))
-					block = _add_vspacing(block)
-					blocks.append((a, n, block if not a_seq else block[1:]))
+					blocks.append((a, n, _add_vspacing(block)[a_seq:]))
 				ind_re = None
 			if re.match(fr'{ind_item}\S', line): item_lines.append(n)
 			if m := re.match(r'( *)(- )?\S.*:\s*$', line):
-				a, a_seq, ind_re = n+1, m[2], re.compile(m[1] + r' ')
+				a, a_seq, ind_re = n+1, bool(m[2]), re.compile(m[1] + ' ')
 		if split_items := len(lines) > split_lines and len(item_lines) > split_count:
 			for n in item_lines: lines[n] = f'\n{lines[n]}'
 		for a, b, block in reversed(blocks): lines[a:b] = block
