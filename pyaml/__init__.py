@@ -161,9 +161,10 @@ def dump_add_vspacing(yaml_str, split_lines=40, split_count=2):
 	return re.sub(r'\n\n+', '\n\n', yaml_str.strip() + '\n')
 
 
-def dump( data, dst=str, safe=None, force_embed=True, vspacing=True,
+def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
 		string_val_style=None, sort_dicts=None, multiple_docs=False, **pyyaml_kws ):
-	'Serialize data as pretty-YAML to either specified dst file-like object, or str/bytes'
+	'''Serialize data as pretty-YAML to specified dst file-like object,
+		or return as str with dst=str (default) or encoded to bytes with dst=bytes.'''
 	if safe is not None:
 		cat = DeprecationWarning if not safe else UserWarning
 		warnings.warn( 'pyaml module "safe" arg/keyword is ignored as implicit'
@@ -172,6 +173,12 @@ def dump( data, dst=str, safe=None, force_embed=True, vspacing=True,
 		warnings.warn( 'pyaml module "sort_dicts" arg/keyword is deprecated as of'
 				' pyaml >= 23.x - translated to sort_keys PyYAML keyword, use that instead',
 			DeprecationWarning, stacklevel=2 )
+	if stream := pyyaml_kws.pop('stream', None):
+		if dst is not None and stream is not dst:
+			raise TypeError( 'Using different pyaml dst='
+				' and pyyaml stream= options at the same time is not supported' )
+		dst = stream
+	elif dst is None: dst = str # old default
 
 	buff = io.StringIO()
 	Dumper = lambda *a,**kw: PYAMLDumper( *a, **kw,

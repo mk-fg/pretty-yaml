@@ -429,6 +429,27 @@ class DumpTests(unittest.TestCase):
 		data = YAML(typ='safe').load(large_yaml)
 		yaml_str = pyaml.dump(data)
 
+	def test_dump_stream_kws(self):
+		data = [1, 2, 3]
+		buff1, buff2 = io.StringIO(), io.StringIO()
+		pyaml.dump(data, dst=buff1)
+		pyaml.dump(data, stream=buff2)
+		self.assertEqual(buff1.getvalue(), buff2.getvalue())
+
+		buff1.seek(0); buff1.truncate()
+		pyaml.dump(data, dst=buff1, stream=buff1)
+		self.assertEqual(buff1.getvalue(), buff2.getvalue())
+		yaml = pyaml.dump(data, dst=str, stream=str)
+		self.assertEqual(yaml, buff2.getvalue())
+
+		buff1.seek(0); buff1.truncate(); buff2.seek(0); buff2.truncate()
+		with self.assertRaises(TypeError):
+			pyaml.dump(data, dst=buff1, stream=buff2)
+		with self.assertRaises(TypeError):
+			pyaml.dump(data, dst=str, stream=buff2)
+		self.assertEqual(buff1.getvalue(), '')
+		self.assertEqual(buff2.getvalue(), '')
+
 
 if __name__ == '__main__':
 	unittest.main()
