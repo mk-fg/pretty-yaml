@@ -138,19 +138,21 @@ def dump_add_vspacing(yaml_str, split_lines=40, split_count=2):
 	'''Add some newlines to separate overly long YAML lists/mappings.
 		"long" means both >split_lines in length and has >split_count items.'''
 	def _add_vspacing(lines):
-		a = ind_re = ind_item = None
+		a = a_seq = ind_re = ind_item = None
 		blocks, item_lines = list(), list()
 		for n, line in enumerate(lines):
-			if ind_item is None and (m := re.match('( *)[^# ]', line)):
-				ind_item = m.group(1)
-				lines.append(f'{ind_item}.') # to run add_vspacing on last block
+			if ind_item is None and (m := re.match('( *)([^# ].?)', line)):
+				ind_item = m[1]; lines.append(f'{ind_item}.') # for last add_vspacing
 			if ind_re:
 				if ind_re.match(line): continue
-				if n - a > split_lines: blocks.append((a, n, _add_vspacing(lines[a:n])))
+				if n - a > split_lines and (block := lines[a:n]):
+					if a_seq: block.insert(0, lines[a-1].replace('- ', '  ', 1))
+					block = _add_vspacing(block)
+					blocks.append((a, n, block if not a_seq else block[1:]))
 				ind_re = None
 			if re.match(fr'{ind_item}\S', line): item_lines.append(n)
-			if m := re.match(r'( *)\S.*:\s*$', line):
-				a, ind_re = n+1, re.compile(m.group(1) + r' ')
+			if m := re.match(r'( *)(- )?\S.*:\s*$', line):
+				a, a_seq, ind_re = n+1, m[2], re.compile(m[1] + r' ')
 		if split_items := len(lines) > split_lines and len(item_lines) > split_count:
 			for n in item_lines: lines[n] = f'\n{lines[n]}'
 		for a, b, block in reversed(blocks): lines[a:b] = block

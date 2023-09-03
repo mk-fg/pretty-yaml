@@ -1,4 +1,4 @@
-import os, sys, io, unittest, json, enum, collections as cs
+import os, sys, io, unittest, json, enum, textwrap, collections as cs
 
 import yaml
 
@@ -225,6 +225,18 @@ class DumpTests(unittest.TestCase):
 		else: dst.append((path, data))
 		return tuple(sorted(dst, key=lambda v: json.dumps(v, sort_keys=True)))
 
+	def pos_list(self, ys, sep='\n'):
+		pos, pos_list = 0, list()
+		while True:
+			pos = ys.find(sep, pos+1)
+			if pos < 0: break
+			pos_list.append(pos)
+		return pos_list
+
+	def empty_line_list(self, ys):
+		return list(n for n, line in enumerate(ys.splitlines()) if not line)
+
+
 	def test_dst(self):
 		buff = io.BytesIO()
 		self.assertIs(pyaml.dump(data, buff), None)
@@ -241,12 +253,7 @@ class DumpTests(unittest.TestCase):
 		a = self.flatten(data)
 		b = pyaml.dump(data, vspacing=dict(split_lines=10, split_count=2))
 		self.assertEqual(a, self.flatten(yaml.safe_load(b)))
-		pos, pos_list = 0, list()
-		while True:
-			pos = b.find(u'\n', pos+1)
-			if pos < 0: break
-			pos_list.append(pos)
-		self.assertEqual( pos_list,
+		self.assertEqual( self.pos_list(b, '\n'),
 			[12, 13, 25, 33, 52, 73, 88, 107, 157, 184, 264, 299, 344, 345, 355, 375, 399,
 			424, 425, 458, 459, 467, 505, 561, 600, 601, 607, 660, 681, 705, 738, 767, 795,
 			796, 805, 806, 820, 831, 866, 936, 937, 949, 950, 963, 998, 1021, 1041, 1072,
@@ -380,7 +387,7 @@ class DumpTests(unittest.TestCase):
 		TestTuple = cs.namedtuple('TestTuple', 'y x z')
 		val = TestTuple(1, 2, 3)
 		val_str = pyaml.dump(val, sort_keys=False)
-		self.assertEqual(val_str, u'y: 1\nx: 2\nz: 3\n') # namedtuple order was preserved
+		self.assertEqual(val_str, 'y: 1\nx: 2\nz: 3\n') # namedtuple order was preserved
 
 	def test_ordereddict(self):
 		d = cs.OrderedDict((i, '') for i in reversed(range(10)))
@@ -412,7 +419,6 @@ class DumpTests(unittest.TestCase):
 		self.assertTrue(docs_str.startswith('---'))
 		self.assertIn('---\n\na: 1\n\nb: 2\n\nc: 3\n', docs_str)
 
-
 		docs_str2 = pyaml.dump(docs, vspacing=True, multiple_docs=True)
 		self.assertEqual(docs_str, docs_str2)
 		docs_str2 = pyaml.dump(docs, vspacing=True)
@@ -439,8 +445,8 @@ class DumpTests(unittest.TestCase):
 		buff1.seek(0); buff1.truncate()
 		pyaml.dump(data, dst=buff1, stream=buff1)
 		self.assertEqual(buff1.getvalue(), buff2.getvalue())
-		yaml = pyaml.dump(data, dst=str, stream=str)
-		self.assertEqual(yaml, buff2.getvalue())
+		ys = pyaml.dump(data, dst=str, stream=str)
+		self.assertEqual(ys, buff2.getvalue())
 
 		buff1.seek(0); buff1.truncate(); buff2.seek(0); buff2.truncate()
 		with self.assertRaises(TypeError):
@@ -449,6 +455,32 @@ class DumpTests(unittest.TestCase):
 			pyaml.dump(data, dst=str, stream=buff2)
 		self.assertEqual(buff1.getvalue(), '')
 		self.assertEqual(buff2.getvalue(), '')
+
+	def test_dump_list_vspacing(self):
+		itm = yaml.safe_load(textwrap.dedent('''
+			builtIn: 1
+			datasource:
+				type: grafana
+				uid: -- Grafana --
+			enable: yes
+			hide: yes
+			iconColor: rgba(0, 211, 255, 1)
+			name: Annotations & Alerts
+			type: dashboard''').replace('\t', '  '))
+		ys = pyaml.dump(dict(mylist=[itm]*10))
+		self.assertEqual(
+			self.empty_line_list(ys),
+			[1, 11, 21, 31, 41, 51, 61, 71, 81, 91] )
+
+		ys = textwrap.dedent('''
+			panels:
+				- datasource:
+						type: datasource
+						uid: grafana
+					fieldConfig:''').replace('\t', '  ')
+		for n in range(60): ys += '\n' + '  '*3 + f'field{n}: value-{n}'
+		ys = pyaml.dump(yaml.safe_load(ys))
+		self.assertEqual(self.empty_line_list(ys), list(range(4, 126, 2)))
 
 
 if __name__ == '__main__':
