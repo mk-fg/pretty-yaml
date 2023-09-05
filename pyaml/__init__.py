@@ -7,6 +7,7 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 
 	class str_ext(str): __slots__ = 'ext',
 	pyaml_anchor_decode = None # imported from unidecode module when needed
+	pyaml_anchor_maxlen = 32
 
 	def __init__(self, *args, **kws):
 		self.pyaml_force_embed = kws.pop('force_embed', True)
@@ -27,9 +28,12 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 	def anchor_node(self, node, hints=list()):
 		if node in self.anchors:
 			if self.anchors[node] is None and not self.pyaml_force_embed:
-				self.anchors[node] = (
-					self.generate_anchor(node) if not hints else
-					self.pyaml_transliterate('_-_'.join(h.value for h in hints)) )
+				if hints:
+					nid = self.pyaml_transliterate('_-_'.join(h.value for h in hints))
+					if len(nid) > (n := self.pyaml_anchor_maxlen) + 8:
+						nid = f'{nid[:n//2]}-_-{nid[-n//2:]}_{self.generate_anchor(node)}'
+				else: nid = self.generate_anchor(node)
+				self.anchors[node] = nid
 		else:
 			self.anchors[node] = None
 			if isinstance(node, yaml.nodes.SequenceNode):

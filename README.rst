@@ -280,7 +280,7 @@ use whatever is most suitable for specific project/environment.
 
 More general info on python packaging can be found at `packaging.python.org`_.
 
-When changing code, unit tests can be run with ``python -m unittest discover``
+When changing code, unit tests can be run with ``python -m unittest``
 from the local repository checkout.
 
 .. _pyaml: https://pypi.org/project/pyaml/

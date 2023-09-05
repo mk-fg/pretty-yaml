@@ -1,4 +1,4 @@
-import os, sys, io, unittest, json, enum, textwrap, collections as cs
+import os, sys, io, re, unittest, json, enum, textwrap, collections as cs
 
 import yaml
 
@@ -215,6 +215,10 @@ data_str_long = dict(cert=(
 
 
 class DumpTests(unittest.TestCase):
+
+	def yaml_var(self, ys, raw=False):
+		ys = textwrap.dedent(ys).replace('\t', '  ')
+		return ys if raw else yaml.safe_load(ys)
 
 	def flatten(self, data, path=tuple()):
 		dst = list()
@@ -456,8 +460,8 @@ class DumpTests(unittest.TestCase):
 		self.assertEqual(buff1.getvalue(), '')
 		self.assertEqual(buff2.getvalue(), '')
 
-	def test_dump_list_vspacing(self):
-		itm = yaml.safe_load(textwrap.dedent('''
+	def test_list_vspacing(self):
+		itm = self.yaml_var('''
 			builtIn: 1
 			datasource:
 				type: grafana
@@ -466,21 +470,36 @@ class DumpTests(unittest.TestCase):
 			hide: yes
 			iconColor: rgba(0, 211, 255, 1)
 			name: Annotations & Alerts
-			type: dashboard''').replace('\t', '  '))
+			type: dashboard''')
 		ys = pyaml.dump(dict(mylist=[itm]*10))
 		self.assertEqual(
 			self.empty_line_list(ys),
 			[1, 11, 21, 31, 41, 51, 61, 71, 81, 91] )
 
-		ys = textwrap.dedent('''
+		ys = self.yaml_var('''
 			panels:
 				- datasource:
 						type: datasource
 						uid: grafana
-					fieldConfig:''').replace('\t', '  ')
+					fieldConfig:''', raw=True)
 		for n in range(60): ys += '\n' + '  '*3 + f'field{n}: value-{n}'
 		ys = pyaml.dump(yaml.safe_load(ys))
 		self.assertEqual(self.empty_line_list(ys), list(range(4, 126, 2)))
+
+	def test_anchor_cutoff(self):
+		data = self.yaml_var('''
+			neque-natus-inventore-deserunt-amet-explicabo-cum-accusamus-temporibus:
+				quam-nulla-dolorem-dolore-velit-quis-deserunt-est-ullam-exercitationem:
+					culpa-quia-incidunt-accusantium-ad-dicta-nobis-rerum-veritatis: &test
+						test: 1
+			similique-commodi-aperiam-libero-error-eos-quidem-eius:
+				ipsam-labore-enim,-vero-voluptatem-eaque-dolores-blanditiis-recusandae:
+					quas-atque-maxime-itaque-ullam-sequi-suscipit-quis-vitae-voluptas: *test''')
+		ys = pyaml.dump(data, force_embed=False)
+		self.assertTrue(m := re.search(r'(?<= )&\S+', ys))
+		self.assertLess(len(m[0]), 50)
+		self.assertTrue(m := re.search(r'(?<= )\*\S+', ys))
+		self.assertLess(len(m[0]), 50)
 
 
 if __name__ == '__main__':
