@@ -488,18 +488,25 @@ class DumpTests(unittest.TestCase):
 
 	def test_anchor_cutoff(self):
 		data = self.yaml_var('''
-			neque-natus-inventore-deserunt-amet-explicabo-cum-accusamus-temporibus:
+			similique-natus-inventore-deserunt-amet-explicabo-cum-accusamus-temporibus:
 				quam-nulla-dolorem-dolore-velit-quis-deserunt-est-ullam-exercitationem:
 					culpa-quia-incidunt-accusantium-ad-dicta-nobis-rerum-veritatis: &test
 						test: 1
 			similique-commodi-aperiam-libero-error-eos-quidem-eius:
 				ipsam-labore-enim,-vero-voluptatem-eaque-dolores-blanditiis-recusandae:
-					quas-atque-maxime-itaque-ullam-sequi-suscipit-quis-vitae-voluptas: *test''')
+					quas-atque-maxime-itaque-ullam-sequi-suscipit-quis-vitae-veritatis: *test''')
 		ys = pyaml.dump(data, force_embed=False)
-		self.assertTrue(m := re.search(r'(?<= )&\S+', ys))
-		self.assertLess(len(m[0]), 50)
-		self.assertTrue(m := re.search(r'(?<= )\*\S+', ys))
-		self.assertLess(len(m[0]), 50)
+		for c in '&', r'\*':
+			self.assertTrue(m := re.search(fr'(?<= ){c}\S+', ys))
+			self.assertLess(len(m[0]), 50)
+			self.assertIn('similique', m[0])
+			self.assertIn('veritatis', m[0])
+		data = dict(test1=dict(test2=(v := dict(a=1, b=2, c=3))), test3=dict(test4=v))
+		ys = pyaml.dump(data, force_embed=False)
+		for c in '&', r'\*':
+			self.assertTrue(m := re.search(fr'(?<= ){c}\S+', ys))
+			self.assertLess(len(m[0]), 30)
+			self.assertEqual(len(re.findall(r'test\d', m[0])), 2)
 
 
 if __name__ == '__main__':
