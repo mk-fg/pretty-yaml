@@ -29,3 +29,6 @@ readme = {file="README.rst"}
 
 [project.optional-dependencies]
 anchors = ["unidecode"]
+
+[project.scripts]
+pyaml = "pyaml.__main__:main"
