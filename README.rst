@@ -97,8 +97,8 @@ pyaml (this module) tries to improve on that a bit, with the following tweaks:
 * "force_embed" option (default=yes) to avoid having &id stuff scattered all
   over the output. Might be more useful to disable it in some specific cases though.
 
-* "&id" anchors, if used, get labels from the keys they get attached to,
-  not just meaningless enumerators.
+* "&idXYZ" anchors, when needed, get labels from the keys they get attached to,
+  not just meaningless enumerators, e.g. "&users_-_admin" instead.
 
 * "string_val_style" option to only apply to strings that are values, not keys,
   i.e::
@@ -206,17 +206,20 @@ to directly use PyYAML regardless, as it won't introduce another
 (rather pointless in that case) dependency and a point of failure.
 
 
-Some Tricks
------------
+Features and Tricks
+-------------------
 
 * Pretty-print any yaml or json (yaml subset) file from the shell::
 
     % python -m pyaml /path/to/some/file.yaml
-    % curl -s https://www.githubstatus.com/api/v2/summary.json | python -m pyaml
+    % pyaml < myfile.yml
+    % curl -s https://www.githubstatus.com/api/v2/summary.json | pyaml
+
+  ``pipx install pyaml`` can be a good way to only install "pyaml" command-line script.
 
 * Process and replace json/yaml file in-place::
 
-    % python -m pyaml -r file-with-json.data
+    % python -m pyaml -r mydata.yml
 
 * Easier "debug printf" for more complex data (all funcs below are aliases to same thing)::
 
@@ -234,6 +237,9 @@ Some Tricks
   Using ``pyaml.add_representer()`` (note \*p\*yaml) as suggested in
   `this SO thread`_ (or `github-issue-7`_) should also work.
 
+  See also this `amazing reply to StackOverflow#3790454`_ for everything about
+  the many different string styles in YAML.
+
 * Control indent and width of the results::
 
     pyaml.dump(wide_and_deep, indent=4, width=120)
@@ -243,11 +249,43 @@ Some Tricks
 
 * Dump multiple yaml documents into a file: ``pyaml.dump_all([data1, data2, data3], dst_file)``
 
-  explicit_start=True is implied, unless explicit_start=False is passed.
+  explicit_start=True is implied, unless overidden by explicit_start=False.
+
+* Control thresholds for vertical spacing of values (0 = always space stuff out),
+  and clump all oneliner ones at the top::
+
+    >>> pyaml.dump( data,
+      sort_dicts=pyaml.PYAMLSort.oneline_group,
+      vspacing=dict(split_lines=0, split_count=0) )
+
+    chart:
+      axisCenteredZero: no
+      axisColorMode: text
+      axisLabel: ''
+      axisPlacement: auto
+      barAlignment: 0
+      drawStyle: line
+      ...
+
+      hideFrom:
+        legend: no
+        tooltip: no
+        viz: no
+
+      scaleDistribution:
+        type: linear
+
+      stacking:
+        group: A
+        mode: none
+
+  Or same thing with cli tool ``-v/--vspacing`` option: ``pyaml -v 0/0g mydata.yaml``
 
 .. _PyYAML docs: http://pyyaml.org/wiki/PyYAMLDocumentation#Scalars
 .. _this SO thread: http://stackoverflow.com/a/7445560
 .. _github-issue-7: https://github.com/mk-fg/pretty-yaml/issues/7
+.. _amazing reply to StackOverflow#3790454:
+  https://stackoverflow.com/questions/3790454/how-do-i-break-a-string-in-yaml-over-multiple-lines/21699210#21699210
 
 
 Installation
@@ -277,6 +315,7 @@ as root (only useful in specialized environments like docker containers).
 
 There are many other python packaging tools - pipenv_, poetry_, pdm_, etc -
 use whatever is most suitable for specific project/environment.
+pipx_ can be used to install command-line script without a module.
 
 More general info on python packaging can be found at `packaging.python.org`_.
 
@@ -290,4 +329,5 @@ from the local repository checkout.
 .. _poetry: https://python-poetry.org/
 .. _pipenv: https://pipenv.pypa.io/
 .. _pdm: https://pdm.fming.dev/
+.. _pipx: https://pypa.github.io/pipx/
 .. _packaging.python.org: https://packaging.python.org/installing/

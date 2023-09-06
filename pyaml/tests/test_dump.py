@@ -501,12 +501,36 @@ class DumpTests(unittest.TestCase):
 			self.assertLess(len(m[0]), 50)
 			self.assertIn('similique', m[0])
 			self.assertIn('veritatis', m[0])
+
 		data = dict(test1=dict(test2=(v := dict(a=1, b=2, c=3))), test3=dict(test4=v))
 		ys = pyaml.dump(data, force_embed=False)
 		for c in '&', r'\*':
 			self.assertTrue(m := re.search(fr'(?<= ){c}\S+', ys))
 			self.assertLess(len(m[0]), 30)
 			self.assertEqual(len(re.findall(r'test\d', m[0])), 2)
+
+	def test_group_online_values(self):
+		data = self.yaml_var('''
+			similique-natus: 1
+			similique-commodi:
+				aperiam-libero: 2
+			"111": digit-string
+			deserunt-est-2: asdasd
+			deserunt-est-1: |
+				line1
+				line2
+			culpa-quia: 1234
+			deserunt-est-3: asdasd
+			10: test1
+			200: test
+			30: test2''')
+		ys1 = pyaml.dump(data,
+			sort_dicts=pyaml.PYAMLSort.oneline_group,
+			vspacing=dict(split_lines=0, split_count=0) )
+		self.assertEqual(self.empty_line_list(ys1), [8, 12])
+		ys2 = pyaml.dump(data, vspacing=dict(split_lines=0, split_count=0))
+		self.assertNotEqual(ys1, ys2)
+		self.assertEqual(self.empty_line_list(ys2), [1, 3, 5, 7, 9, 13, 15, 17, 19, 21])
 
 
 if __name__ == '__main__':

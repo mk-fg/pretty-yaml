@@ -1,19 +1,26 @@
-import os, sys, io, re, string, warnings, pathlib, collections as cs
+import os, sys, io, re, string, warnings, enum, pathlib, collections as cs
 
 import yaml
 
+
+PYAMLSort = enum.Enum('PYAMLSort', 'none keys oneline_group')
 
 class PYAMLDumper(yaml.dumper.SafeDumper):
 
 	class str_ext(str): __slots__ = 'ext',
 	pyaml_anchor_decode = None # imported from unidecode module when needed
-	pyaml_anchor_maxlen = 32
+	pyaml_sort_dicts = None
 
-	def __init__(self, *args, **kws):
-		self.pyaml_force_embed = kws.pop('force_embed', True)
-		self.pyaml_string_val_style = kws.pop('string_val_style', None)
-		if (sort_keys := kws.pop('sort_dicts', None)) is not None:
-			self.sort_keys = sort_keys # for compatibility with <23.x module options
+	def __init__( self, *args, sort_dicts=None,
+			force_embed=True, string_val_style=None, anchor_len_max=40, **kws ):
+		self.pyaml_force_embed = force_embed
+		self.pyaml_string_val_style = string_val_style
+		self.pyaml_anchor_len_max = anchor_len_max
+		if isinstance(sort_dicts, PYAMLSort):
+			if sort_dicts is sort_dicts.none: kws['sort_keys'] = False
+			elif sort_dicts is sort_dicts.keys: kws['sort_keys'] = True
+			else: self.pyaml_sort_dicts, kws['sort_keys'] = sort_dicts, False
+		elif sort_dicts is not None: kws['sort_keys'] = sort_dicts # for compatibility
 		return super().__init__(*args, **kws)
 
 	@staticmethod
@@ -30,7 +37,7 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 			if self.anchors[node] is None and not self.pyaml_force_embed:
 				if hints:
 					nid = self.pyaml_transliterate('_-_'.join(h.value for h in hints))
-					if len(nid) > (n := self.pyaml_anchor_maxlen) + 8:
+					if len(nid) > (n := self.pyaml_anchor_len_max - 9) + 9:
 						nid = f'{nid[:n//2]}-_-{nid[-n//2:]}_{self.generate_anchor(node)}'
 				else: nid = self.generate_anchor(node)
 				self.anchors[node] = nid
@@ -91,6 +98,25 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 				else: style = '|'
 		return yaml.representer.ScalarNode('tag:yaml.org,2002:str', data, style=style)
 
+	def represent_mapping_sort_oneline(self, kv):
+		key, value = kv
+		if not value or isinstance(value, (int, float)): v = 1
+		elif isinstance(value, str) and '\n' not in value: v = 1
+		else: v = 2
+		if isinstance(key, (int, float)): k = 1
+		elif isinstance(key, str): k = 2
+		elif key is None: k = 4
+		else: k, key = 3, f'{type(key)}\0{key}' # best-effort sort for all other types
+		return v, k, key
+
+	def represent_mapping(self, tag, mapping, *args, **kws):
+		if self.pyaml_sort_dicts is PYAMLSort.oneline_group:
+			try:
+				mapping = dict(sorted( mapping.items(),
+					key=self.represent_mapping_sort_oneline ))
+			except TypeError: pass # for subtype comparison fails
+		return super().represent_mapping(tag, mapping, *args, **kws)
+
 	def represent_undefined(self, data):
 		if isinstance(data, tuple) and hasattr(data, '_make') and hasattr(data, '_asdict'):
 			return self.represent_dict(data._asdict()) # assuming namedtuple
@@ -133,33 +159,38 @@ add_representer(str, PYAMLDumper.represent_str)
 add_representer(cs.defaultdict, PYAMLDumper.represent_dict)
 add_representer(cs.OrderedDict, PYAMLDumper.represent_dict)
 add_representer(set, PYAMLDumper.represent_list)
-add_representer(
-	type(pathlib.Path('')), lambda cls,o: cls.represent_data(str(o)) )
+add_representer(type(pathlib.Path('')), lambda cls,o: cls.represent_data(str(o)))
 add_representer(None, PYAMLDumper.represent_undefined)
 
 
-def dump_add_vspacing(yaml_str, split_lines=40, split_count=2):
+def dump_add_vspacing(yaml_str, split_lines=40, split_count=2, oneline_group=False):
 	'''Add some newlines to separate overly long YAML lists/mappings.
 		"long" means both >split_lines in length and has >split_count items.'''
 	def _add_vspacing(lines):
-		a = a_seq = ind_re = ind_item = None
+		a = a_seq = ind_re = ind_re_sub = None
 		blocks, item_lines = list(), list()
 		for n, line in enumerate(lines):
-			if ind_item is None and (m := re.match(r'( *)([^# ].?)', line)):
-				ind_item = m[1]; lines.append(f'{ind_item}.') # for last add_vspacing
-			if ind_re:
-				if ind_re.match(line): continue
+			if ind_re is None and (m := re.match(r'( *)([^# ].?)', line)):
+				ind_re = re.compile(m[1] + r'\S')
+				lines.append(f'{m[1]}.') # for last add_vspacing
+			if ind_re_sub:
+				if ind_re_sub.match(line): continue
 				if n - a > split_lines and (block := lines[a:n]):
 					if a_seq: block.insert(0, lines[a-1].replace('- ', '  ', 1))
 					blocks.append((a, n, _add_vspacing(block)[a_seq:]))
-				ind_re = None
-			if re.match(fr'{ind_item}\S', line): item_lines.append(n)
+				ind_re_sub = None
+			if ind_re.match(line): item_lines.append(n)
 			if m := re.match(r'( *)(- )?\S.*:\s*$', line):
-				a, a_seq, ind_re = n+1, bool(m[2]), re.compile(m[1] + ' ')
+				a, a_seq, ind_re_sub = n+1, bool(m[2]), re.compile(m[1] + ' ')
 		if split_items := len(lines) > split_lines and len(item_lines) > split_count:
-			for n in item_lines: lines[n] = f'\n{lines[n]}'
+			for n in item_lines:
+				try:
+					if oneline_group and ind_re and (
+						ind_re.match(lines[n-1]) and ind_re.match(lines[n+1]) ): continue
+				except IndexError: continue
+				lines[n] = f'\n{lines[n]}'
 		for a, b, block in reversed(blocks): lines[a:b] = block
-		if ind_item is not None: lines.pop()
+		if ind_re: lines.pop()
 		if split_items: lines.append('')
 		return lines
 	yaml_str = '\n'.join(_add_vspacing(yaml_str.splitlines()))
@@ -174,8 +205,8 @@ def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
 		cat = DeprecationWarning if not safe else UserWarning
 		warnings.warn( 'pyaml module "safe" arg/keyword is ignored as implicit'
 			' safe=maybe-true?, as of pyaml >= 23.x', category=cat, stacklevel=2 )
-	if sort_dicts is not None:
-		warnings.warn( 'pyaml module "sort_dicts" arg/keyword is deprecated as of'
+	if sort_dicts is not None and not isinstance(sort_dicts, PYAMLSort):
+		warnings.warn( 'Using pyaml module sort_dicts as boolean is deprecated as of'
 				' pyaml >= 23.x - translated to sort_keys PyYAML keyword, use that instead',
 			DeprecationWarning, stacklevel=2 )
 	if stream := pyyaml_kws.pop('stream', None):
@@ -204,6 +235,7 @@ def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
 				' for pyaml_add_vspacing, and any other values are ignored,'
 				' enabling default vspacing behavior.', DeprecationWarning, stacklevel=2 )
 			vspacing = dict()
+		if sort_dicts is PYAMLSort.oneline_group: vspacing.setdefault('oneline_group', True)
 		buff = dump_add_vspacing(buff, **vspacing)
 
 	if dst is bytes: return buff.encode()
