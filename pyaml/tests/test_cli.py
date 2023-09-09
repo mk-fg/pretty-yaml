@@ -92,5 +92,19 @@ class CliToolTests(unittest.TestCase):
 			self.assertRegex(err.getvalue(), r'^WARNING:')
 		finally: pyaml.dump = pyaml_dump
 
+	def test_out_err_nocheck(self):
+		d, out, err = data.copy(), io.StringIO(), io.StringIO()
+		pyaml_dump, pyaml.dump = pyaml.dump, ft.partial(
+			self.pyaml_dump_corrupted, pyaml.dump, append='\0asd : fgh : ghj\0' )
+		try:
+			ys = yaml.safe_dump(d)
+			pyaml.cli.main( argv=['-q'],
+				stdin=io.StringIO(ys), stdout=out, stderr=err )
+			with self.assertRaises(yaml.YAMLError):
+				yaml.safe_load(out.getvalue())
+			self.assertGreater(len(out.getvalue()), 150)
+			self.assertEqual(err.getvalue(), '')
+		finally: pyaml.dump = pyaml_dump
+
 
 if __name__ == '__main__': unittest.main()

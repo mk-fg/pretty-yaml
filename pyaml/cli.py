@@ -53,6 +53,8 @@ def main(argv=None, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
 			M = min count of values in a list/mapping to split.
 			"g" can be added to clump single-line values at the top of such lists/maps.
 		Values examples: 20g, 5/1g, 60/4, g, 10.'''))
+	parser.add_argument('-q', '--quiet', action='store_true',
+		help='Disable sanity-check on the output and suppress stderr warnings.')
 	opts = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
 	src = open(opts.path) if opts.path else stdin
@@ -72,19 +74,22 @@ def main(argv=None, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
 			pyaml_kwargs['vspacing'] = vspacing
 
 	ys = pyaml.dump(data, **pyaml_kwargs)
-	try:
-		data_chk = yaml.safe_load(ys)
-		try: data_hash = json.dumps(data, sort_keys=True)
-		except: pass # too complex for checking with json
-		else:
-			if json.dumps(data_chk, sort_keys=True) != data_hash:
-				raise AssertionError('Data from before/after pyaml does not match')
-	except Exception as err:
-		p_err = lambda *a,**kw: print(*a, **kw, file=stderr, flush=True)
-		p_err( 'WARNING: Failed to parse produced YAML'
-			' output back to data, it is likely too complicated for pyaml' )
-		err = f'[{err.__class__.__name__}] {err}'
-		p_err('  raised error: ' + ' // '.join(map(str.strip, err.split('\n'))))
+
+	if not opts.quiet:
+		try:
+			data_chk = yaml.safe_load(ys)
+			try: data_hash = json.dumps(data, sort_keys=True)
+			except: pass # too complex for checking with json
+			else:
+				if json.dumps(data_chk, sort_keys=True) != data_hash:
+					raise AssertionError('Data from before/after pyaml does not match')
+		except Exception as err:
+			p_err = lambda *a,**kw: print(*a, **kw, file=stderr, flush=True)
+			p_err( 'WARNING: Failed to parse produced YAML'
+				' output back to data, it is likely too complicated for pyaml' )
+			err = f'[{err.__class__.__name__}] {err}'
+			p_err('  raised error: ' + ' // '.join(map(str.strip, err.split('\n'))))
+
 	if opts.replace and opts.path:
 		with safe_replacement(opts.path) as tmp: tmp.write(ys)
 	else: stdout.write(ys)
