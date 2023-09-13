@@ -1,4 +1,5 @@
-import os, sys, io, enum, unittest, json, collections as cs, functools as ft
+import collections as cs, functools as ft
+import os, sys, io, enum, unittest, json, tempfile
 
 import yaml
 
@@ -105,6 +106,54 @@ class CliToolTests(unittest.TestCase):
 			self.assertGreater(len(out.getvalue()), 150)
 			self.assertEqual(err.getvalue(), '')
 		finally: pyaml.dump = pyaml_dump
+
+	def test_replace(self):
+		d, out, err = data.copy(), io.StringIO(), io.StringIO()
+		sys_out, sys_err = sys.stdout, sys.stderr
+		with self.assertRaises(SystemExit):
+			sys.stdout, sys.stderr = out, err
+			try:
+				pyaml.cli.main( argv=['-r'],
+					stdin=io.StringIO(), stdout=out, stderr=err )
+			finally: sys.stdout, sys.stderr = sys_out, sys_err
+		self.assertEqual(out.getvalue(), '')
+		self.assertGreater(len(err.getvalue()), 50)
+		err.seek(0); err.truncate()
+
+		with tempfile.NamedTemporaryFile(prefix='.pyaml.test.') as tmp:
+			d_json, d_yaml = json.dumps(d).encode(), pyaml.dump(d, bytes)
+			tmp.write(d_json); tmp.flush()
+			os.fchmod(tmp.fileno(), 0o1510)
+			stat_tmp = os.fstat(tmp.fileno())
+
+			pyaml.cli.main( argv=['-r', tmp.name],
+				stdin=io.StringIO(), stdout=out, stderr=err )
+			with open(tmp.name, 'rb') as tmp_new:
+				d_new, stat_new = tmp_new.read(), os.fstat(tmp_new.fileno())
+			self.assertEqual(out.getvalue(), '')
+			self.assertEqual(err.getvalue(), '')
+
+			tmp.seek(0); d_tmp = tmp.read()
+			self.assertEqual(d_tmp, d_json)
+			self.assertNotEqual(d_tmp, d_new)
+			self.assertNotIn(d_json, d_new)
+			self.assertEqual(yaml.safe_load(d_new), d)
+			self.assertEqual(
+				(stat_tmp.st_mode, stat_tmp.st_uid, stat_tmp.st_gid),
+				(stat_new.st_mode, stat_new.st_uid, stat_new.st_gid) )
+
+			os.chmod(tmp.name, 0o600)
+			with open(tmp.name, 'r+') as tmp_new:
+				tmp_new.write('\0asd : fgh : ghj\0')
+				tmp_new.seek(0); d_new = tmp_new.read()
+			with self.assertRaises(yaml.YAMLError):
+				pyaml.cli.main( argv=['-r', tmp.name],
+					stdin=io.StringIO(), stdout=out, stderr=err )
+			self.assertEqual(out.getvalue(), '')
+			self.assertEqual(err.getvalue(), '')
+			with open(tmp.name, 'r') as tmp_new:
+				tmp_new.seek(0); d_new2 = tmp_new.read()
+			self.assertEqual(d_new, d_new2)
 
 
 if __name__ == '__main__': unittest.main()

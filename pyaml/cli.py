@@ -57,6 +57,9 @@ def main(argv=None, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
 		help='Disable sanity-check on the output and suppress stderr warnings.')
 	opts = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
+	if opts.replace and not opts.path:
+		parser.error('-r/--replace option can only be used with a file path, not stdin')
+
 	src = open(opts.path) if opts.path else stdin
 	try: data = yaml.safe_load(src)
 	finally: src.close()
@@ -90,6 +93,6 @@ def main(argv=None, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
 			err = f'[{err.__class__.__name__}] {err}'
 			p_err('  raised error: ' + ' // '.join(map(str.strip, err.split('\n'))))
 
-	if opts.replace and opts.path:
+	if opts.replace:
 		with safe_replacement(opts.path) as tmp: tmp.write(ys)
 	else: stdout.write(ys)

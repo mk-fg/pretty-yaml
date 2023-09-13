@@ -169,7 +169,7 @@ data = dict(
 data['query_dump_clone'] = data['query_dump']
 data['ids']['id в уникоде'] = [4, 5, 6]
 data['ids']['id2 в уникоде'] = data['ids']['id в уникоде']
-data["'asd'\n!\0\1"] =cs.OrderedDict([('b', 1), ('a', 2)])
+data["'asd'\n!\0\1"] = cs.OrderedDict([('b', 1), ('a', 2)])
 
 data_str_multiline = dict(cert=(
 	'-----BEGIN CERTIFICATE-----\n'
