@@ -45,7 +45,8 @@ combination of parameters for such output that I've seen so far is probably this
 
   >>> m = [123, 45.67, {1: None, 2: False}, 'some text']
   >>> data = dict(a='asldnsa\nasldpáknsa\n', b='whatever text', ma=m, mb=m)
-  >>> yaml.safe_dump(data, sys.stdout, allow_unicode=True, default_flow_style=False)
+  >>> yaml.safe_dump( data, sys.stdout,
+    width=100, allow_unicode=True, default_flow_style=False )
   a: 'asldnsa
 
     asldpáknsa
@@ -63,7 +64,7 @@ combination of parameters for such output that I've seen so far is probably this
 pyaml (this module) tries to improve on that a bit, with the following tweaks:
 
 * Most human-friendly representation options in PyYAML (that I know of)
-  are used as defaults.
+  are used as defaults - unicode, flow-style, width=100 (old default is 80).
 
 * Dump "null" values as empty values, if possible, which have the same meaning
   but reduce visual clutter and are easier to edit.

@@ -198,7 +198,7 @@ def dump_add_vspacing(yaml_str, split_lines=40, split_count=2, oneline_group=Fal
 
 
 def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
-		string_val_style=None, sort_dicts=None, multiple_docs=False, **pyyaml_kws ):
+		string_val_style=None, sort_dicts=None, multiple_docs=False, width=100, **pyyaml_kws ):
 	'''Serialize data as pretty-YAML to specified dst file-like object,
 		or return as str with dst=str (default) or encoded to bytes with dst=bytes.'''
 	if safe is not None:
@@ -221,7 +221,7 @@ def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
 		force_embed=force_embed, string_val_style=string_val_style, sort_dicts=sort_dicts )
 	if not multiple_docs: data = [data]
 	else: pyyaml_kws.setdefault('explicit_start', True)
-	yaml.dump_all( data, buff, Dumper=Dumper,
+	yaml.dump_all( data, buff, Dumper=Dumper, width=width,
 		default_flow_style=False, allow_unicode=True, **pyyaml_kws )
 	buff = buff.getvalue()
 
