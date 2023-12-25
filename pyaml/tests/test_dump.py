@@ -7,6 +7,9 @@ except ImportError:
 	sys.path.insert(1, os.path.join(__file__, *['..']*3))
 	import pyaml
 
+try: import unidecode
+except ImportError: unidecode = None
+
 
 large_yaml = br'''
 ### Default (baseline) configuration parameters.
@@ -272,7 +275,16 @@ class DumpTests(unittest.TestCase):
 		b = pyaml.dump(data, force_embed=False)
 		self.assertNotIn('&id00', b)
 		self.assertIn('query_dump_clone: *query_dump_clone', b)
-		self.assertIn("id в уникоде: &ids_-_id2_v_unikode", b) # kinda bug - should be just "id"
+		self.assertIn('id в уникоде: &ids_-_id2_', b)
+		if not unidecode: self.assertIn('id в уникоде: &ids_-_id2__id00', b)
+
+	def test_ids_unidecode(self):
+		if not unidecode:
+			self.skipTest('No unidecode module to test ids from non-ascii keys')
+		b = pyaml.dump(data, force_embed=False)
+		self.assertNotIn('&id00', b)
+		self.assertNotIn('_id00', b)
+		self.assertIn('id в уникоде: &ids_-_id2_v_unikode', b)
 
 	def test_force_embed(self):
 		for check, fe in (self.assertNotIn, True), (self.assertIn, False):
@@ -435,7 +447,7 @@ class DumpTests(unittest.TestCase):
 
 	def test_ruamel_yaml(self):
 		try: from ruamel.yaml import YAML
-		except ImportError: return unittest.skip('No ruamel.yaml module to test it')
+		except ImportError: self.skipTest('No ruamel.yaml module to test it')
 		data = YAML(typ='safe').load(large_yaml)
 		yaml_str = pyaml.dump(data)
 

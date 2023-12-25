@@ -297,9 +297,12 @@ It's a regular Python 3.8+ module/package, published on PyPI (as pyaml_).
 Module uses PyYAML_ for processing of the actual YAML files
 and should pull it in as a dependency.
 
-Dependency on unidecode_ module is optional and should only be necessary
-with force_embed=False keyword, and same-id objects or recursion is used
-within serialized data.
+Dependency on unidecode_ module is optional and only be used with
+force_embed=False keyword (defaults to True), and same-id objects
+or recursion within serialized data - i.e. only when generating
+&some_key_id anchors is actually needed.
+If module is unavailable at runtime, anchor ids might be less like their
+keys and maybe not as nice.
 
 Using pip_ is how you generally install it, usually coupled with venv_ usage
 (which will also provide "pip" tool itself)::
