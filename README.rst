@@ -73,7 +73,7 @@ pyaml (this module) tries to improve on that a bit, with the following tweaks:
   are represented as their safe YAML-compatible base (like int, list or mapping),
   with mappings key-sorted by default for more diff-friendly output.
 
-* Use shorter and simplier yes/no for booleans.
+* Use shorter and simpler yes/no for booleans.
 
 * List items get indented, as they should be.
 
