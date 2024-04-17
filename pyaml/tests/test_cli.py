@@ -52,7 +52,7 @@ class CliToolTests(unittest.TestCase):
 		d.update(
 			d=test_const.heartbeat,
 			asd=cs.OrderedDict(b=1, a=2) )
-		ys = pyaml.dump(d)
+		ys, out = pyaml.dump(d), io.StringIO()
 		pyaml.cli.main( argv=list(),
 			stdin=io.StringIO(ys), stdout=out, stderr=err )
 		yaml.safe_load(out.getvalue())
@@ -155,5 +155,64 @@ class CliToolTests(unittest.TestCase):
 				tmp_new.seek(0); d_new2 = tmp_new.read()
 			self.assertEqual(d_new, d_new2)
 
+	def test_single_doc(self):
+		d, out, err = data.copy(), io.StringIO(), io.StringIO()
+		ys = yaml.safe_dump(d)
+		pyaml.cli.main( argv=list(),
+			stdin=io.StringIO(ys), stdout=out, stderr=err )
+		self.assertNotIn('---', out.getvalue())
+		pyaml.cli.main( argv=list(),
+			stdin=io.StringIO('---\n' + ys), stdout=out, stderr=err )
+		self.assertNotIn('---', out.getvalue())
+		self.assertEqual(len(list(yaml.safe_load_all(out.getvalue()))), 1)
+
+	def test_multi_doc(self):
+		d, out, err = data.copy(), io.StringIO(), io.StringIO()
+		d1, d2 = d, d.copy(); d2['doc2_val'] = 1234
+		ys = yaml.safe_dump_all([d1, d2])
+		pyaml.cli.main( argv=list(),
+			stdin=io.StringIO(ys), stdout=out, stderr=err )
+		self.assertGreater(len(out.getvalue()), 150)
+		self.assertEqual(err.getvalue(), '')
+		self.assertIn('---', out.getvalue())
+		xd1, xd2 = yaml.safe_load_all(out.getvalue())
+		self.assertNotIn('doc2_val', xd1)
+		self.assertEqual(xd2.get('doc2_val'), d2['doc2_val'])
+
+	def test_lines(self):
+		d, out, err = data.copy(), io.StringIO(), io.StringIO()
+		d1, d2, d3 = d, d.copy(), d.copy()
+		d2['doc2_val'], d3['doc3_val'] = 1234, 5678
+		ys = '\n\n   \n \0' + json.dumps(d1)
+		ys += '\0\n   \n\0\0\0\n' + json.dumps(d2)
+		ys += '\n\0' + json.dumps(d3) + '\n \n\0  \t\0\n'
+		ys += '\n' + json.dumps(d3)
+		ys += '\0' + json.dumps(d3)
+		pyaml.cli.main( argv=['-l'],
+			stdin=io.StringIO(ys), stdout=out, stderr=err )
+		with self.assertRaises(yaml.YAMLError):
+			pyaml.cli.main( argv=list(),
+				stdin=io.StringIO(ys), stdout=out, stderr=err )
+		self.assertGreater(len(out.getvalue()), 150)
+		self.assertEqual(err.getvalue(), '')
+		self.assertIn('---', out.getvalue())
+
+		xd1, xd2, xd3, xd3a, xd3b = yaml.safe_load_all(out.getvalue())
+		self.assertNotIn('doc2_val', xd1)
+		self.assertNotIn('doc3_val', xd1)
+		self.assertEqual(xd2.get('doc2_val'), d2['doc2_val'])
+		self.assertNotIn('doc3_val', xd2)
+		self.assertEqual(xd3.get('doc3_val'), d3['doc3_val'])
+		self.assertNotIn('doc2_val', xd3)
+		self.assertEqual(xd3a.get('doc3_val'), d3['doc3_val'])
+		self.assertEqual(xd3b.get('doc3_val'), d3['doc3_val'])
+
+		out, ys = io.StringIO(), '\n\0' + json.dumps(d3) + '\n \n\0\t\0\n'
+		pyaml.cli.main( argv=['--lines'],
+			stdin=io.StringIO(ys), stdout=out, stderr=err )
+		xd3, = yaml.safe_load_all(out.getvalue())
+		self.assertEqual(xd3.get('doc3_val'), d3['doc3_val'])
+		self.assertNotIn('doc2_val', xd3)
+		self.assertNotIn('---', out.getvalue())
 
 if __name__ == '__main__': unittest.main()
