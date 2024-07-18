@@ -59,6 +59,19 @@ class CliToolTests(unittest.TestCase):
 		self.assertGreater(len(out.getvalue()), 150)
 		self.assertEqual(err.getvalue(), '')
 
+	def test_vspacing_flags(self):
+		d, out, err = data.copy(), io.StringIO(), io.StringIO()
+		ys = yaml.safe_dump(d)
+		outs, ins = set(), ['', '-v0/0', '-v0/0s', '-v0/0sg', '-vg']
+		for argv in ins:
+			pyaml.cli.main( argv=argv.split(),
+				stdin=io.StringIO(ys), stdout=(out := io.StringIO()), stderr=err )
+			self.assertNotIn(out.getvalue(), outs)
+			self.assertGreater(len(out.getvalue()), 150)
+			self.assertEqual(err.getvalue(), '')
+			outs.add(out.getvalue())
+		self.assertEqual(len(ins), len(outs)) # all flags affect output
+
 	def test_load_fail(self):
 		d, out, err = data.copy(), io.StringIO(), io.StringIO()
 		ys = yaml.safe_dump(d) + '\0asd : fgh : ghj\0'
