@@ -495,8 +495,10 @@ class DumpTests(unittest.TestCase):
 						uid: grafana
 					fieldConfig:''', raw=True)
 		for n in range(60): ys += '\n' + '  '*3 + f'field{n}: value-{n}'
-		ys = pyaml.dump(yaml.safe_load(ys))
+		ys = pyaml.dump(yaml.safe_load(ys), vspacing=dict(oneline_split=True))
 		self.assertEqual(self.empty_line_list(ys), list(range(4, 126, 2)))
+		ys = pyaml.dump(yaml.safe_load(ys))
+		self.assertEqual(self.empty_line_list(ys), [4])
 
 	def test_anchor_cutoff(self):
 		data = self.yaml_var('''
@@ -526,6 +528,11 @@ class DumpTests(unittest.TestCase):
 			similique-natus: 1
 			similique-commodi:
 				aperiam-libero: 2
+			'vel praesentium quo':
+				exercitationem debitis: porro beatae id
+				rerum commodi ipsum: nesciunt veritatis
+				amet quaerat:
+					assumenda: odio tenetur saepe
 			"111": digit-string
 			deserunt-est-2: asdasd
 			deserunt-est-1: |
@@ -536,13 +543,22 @@ class DumpTests(unittest.TestCase):
 			10: test1
 			200: test
 			30: test2''')
-		ys1 = pyaml.dump(data,
+		# Sort and oneline-group
+		ys1 = pyaml.dump( data,
 			sort_dicts=pyaml.PYAMLSort.oneline_group,
 			vspacing=dict(split_lines=0, split_count=0) )
-		self.assertEqual(self.empty_line_list(ys1), [8, 12])
+		self.assertEqual(self.empty_line_list(ys1), [8, 12, 15, 19])
+		# No oneline-group by default
 		ys2 = pyaml.dump(data, vspacing=dict(split_lines=0, split_count=0))
 		self.assertNotEqual(ys1, ys2)
-		self.assertEqual(self.empty_line_list(ys2), [1, 3, 5, 7, 9, 13, 15, 17, 19, 21])
+		self.assertEqual( self.empty_line_list(ys2),
+			[1, 4, 6, 9, 11, 13, 15, 17, 21, 23, 25, 27, 29] )
+		# No-sort oneline-group overrides oneline-split for conseq oneliners
+		ys3 = pyaml.dump(data, sort_keys=False, vspacing=dict(
+			split_lines=0, split_count=0, oneline_group=True, oneline_split=True ))
+		self.assertNotEqual(ys1, ys3)
+		self.assertNotEqual(ys2, ys3)
+		self.assertEqual(self.empty_line_list(ys3), [1, 4, 8, 11, 14, 18])
 
 
 if __name__ == '__main__':
