@@ -1,4 +1,4 @@
-import os, sys, re, stat, json, tempfile, contextlib
+import os, sys, re, stat, errno, json, tempfile, contextlib
 import yaml, pyaml
 
 
@@ -12,8 +12,10 @@ def safe_replacement(path, *open_args, mode=None, xattrs=None, **open_kws):
 	if xattrs is None and getattr(os, 'getxattr', None): # MacOS
 		try: xattrs = dict((k, os.getxattr(path, k)) for k in os.listxattr(path))
 		except FileNotFoundError: pass
+		except OSError as err:
+			if err.errno != errno.ENOTSUP: raise
 	open_kws.update( delete=False,
-		dir=os.path.dirname(path), prefix=os.path.basename(path)+'.' )
+		dir=os.path.dirname(path), prefix=os.path.basename(path) + '.' )
 	if not open_args: open_kws.setdefault('mode', 'w')
 	with tempfile.NamedTemporaryFile(*open_args, **open_kws) as tmp:
 		try:
