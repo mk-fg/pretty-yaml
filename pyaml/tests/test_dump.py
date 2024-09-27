@@ -472,7 +472,7 @@ class DumpTests(unittest.TestCase):
 		self.assertEqual(buff1.getvalue(), '')
 		self.assertEqual(buff2.getvalue(), '')
 
-	def test_list_vspacing(self):
+	def test_vspacing_limits(self):
 		itm = self.yaml_var('''
 			builtIn: 1
 			datasource:
@@ -500,6 +500,38 @@ class DumpTests(unittest.TestCase):
 		ys = pyaml.dump(yaml.safe_load(ys))
 		self.assertEqual(self.empty_line_list(ys), [4])
 
+	def test_split_block_types(self):
+		data = self.yaml_var('''
+			test: # list items should be split
+				- key1: 1
+					key2: A
+				- key1: 1
+					key2: A
+				- key1: 1
+					key2: A
+			test2: # list items should be split
+				- key1:
+						key11: A
+						key12: B
+				- key2:
+						key21: A
+				- val
+			test3: # only top-level keys should be split
+				key1:
+					key11:
+					key12:
+				key2:
+					- key21: A
+					- key22: B
+					- key23: C
+				key3:
+					- key31:
+					- key32:
+					- key33:
+			''')
+		ys = pyaml.dump(data, vspacing=dict(split_lines=0))
+		self.assertEqual(self.empty_line_list(ys), [1, 4, 7, 10, 12, 16, 19, 21, 23, 27, 32])
+
 	def test_anchor_cutoff(self):
 		data = self.yaml_var('''
 			similique-natus-inventore-deserunt-amet-explicabo-cum-accusamus-temporibus:
@@ -523,7 +555,7 @@ class DumpTests(unittest.TestCase):
 			self.assertLess(len(m[0]), 30)
 			self.assertEqual(len(re.findall(r'test\d', m[0])), 2)
 
-	def test_group_online_values(self):
+	def test_group_oneline_values(self):
 		data = self.yaml_var('''
 			similique-natus: 1
 			similique-commodi:
