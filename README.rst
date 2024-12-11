@@ -288,14 +288,13 @@ Features and Tricks
 
 * Dump any non-YAML-type values when debugging or to replace later::
 
-    >>> unknown1 = type('test2', (object,), dict(a='b'))()
-    >>> unknown2 = type('test2', (object,), dict(__repr__=lambda s: '# test2 repr'+' '*80))()
-    >>> data = dict(known='test1', unknown1=unknown1, unknown2=unknown2)
-    >>> pyaml.p(data, repr_unknown=True)
+    >>> test2 = type('test2', (object,), dict(a='b'))()
+    >>> test3 = type('test3', (object,), dict(__repr__=lambda s: '# test3 repr'+' '*80))()
+    >>> pyaml.p(dict(test1='test1', test2=test2, test3=test3), repr_unknown=True)
 
-    known: test1
-    unknown1: <__main__.test2 object at 0x7fb19d8a8c80> # python value
-    unknown2: '# test2 repr                                       ...[50/92]' # python __main__.test2
+    test1: test1
+    test2: <__main__.test2 object at 0x7f00ccd1ade0> # python value
+    test3: '# test3 repr                                       ...[50/92]' # python __main__.test3
 
   Such unknown-type values get truncated if their repr() is too long, which can
   be controlled by passing int max-length to repr_unknown instead of bool.
