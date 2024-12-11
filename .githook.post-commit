@@ -1,6 +1,10 @@
 #!/bin/bash
 set -eo pipefail
 
+# (Re-)Assigns git tags based on version in pyproject.toml file, logs action to stdout
+# Current git doesn't have option to auto-push tags, so there's pre-push hook for that too
+# (--follow-tags seem to only extend to annotated tags, which these aren't)
+
 die() {
 	echo >&2 $'\ngit-post-commit :: ----------------------------------------'
 	echo >&2 "git-post-commit :: ERROR: $@"
@@ -20,7 +24,7 @@ ver=$( git show --no-color --diff-filter=M -aU0 pyproject.toml |
 	ver_tag=$(git tag --sort=v:refname | tail -1)
 	[[ -n "$ver" && "$ver" = "$ver_tag" ]] || die 'No new release to tag,'`
 		`" and last git-tag [ $ver_tag ] does not match pyproject.toml version [ $ver ]"
-	echo $'\ngit-post-commit: no new tag, last one matches pyproject.toml\n'; exit 0; }
+	echo $'\ngit-post-commit :: no new tag, last one matches pyproject.toml\n'; exit 0; }
 
 git tag -f "$ver" HEAD # can be reassigning tag after --amend
 echo -e "\ngit-post-commit: tagged new release [ $ver ]\n"
