@@ -271,15 +271,22 @@ def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
 # Simplier pyaml.dump() aliases
 
 def dump_all(data, *dump_args, **dump_kws):
+	'Alias to dump(list, multiple_docs=True) for API compatibility with pyyaml'
 	return dump(data, *dump_args, multiple_docs=True, **dump_kws)
 
 def dumps(data, **dump_kws):
+	'Alias to dump() for API compatibility with stdlib conventions'
 	return dump(data, **dump_kws)
 
 def pprint(*data, **dump_kws):
+	'Similar to how print() works, with any number of arguments and stdout-default'
 	dst = dump_kws.pop('file', dump_kws.pop('dst', sys.stdout))
 	if len(data) == 1: data, = data
 	dump(data, dst=dst, **dump_kws)
+
+def debug(*data, **dump_kws):
+	'Same as pprint, but also repr-printing any non-yaml types'
+	pprint(*data, repr_unknown=True, **dump_kws)
 
 _p = lambda *a,_p=print,**kw: _p(*a, **kw, flush=True) # to use here for debug
 p = print = pprint
