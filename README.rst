@@ -226,12 +226,19 @@ Features and Tricks
 
     % python -m pyaml -r mydata.yml
 
-* Easier "debug printf" for more complex data (all funcs below are aliases to same thing)::
+* Easier "debug printf to YAML" for some complex data::
+
+    pyaml.debug(data)
+    pyaml.debug(node_graph, ifaces, group_vars)
+
+  debug() is an alias for pprint(repr_unknown=True) to dump non-YAML types as well.
+
+  More strict YAML-print funcs (all aliases to same thing)::
 
     pyaml.p(stuff)
     pyaml.pprint(my_data)
     pyaml.pprint('----- HOW DOES THAT BREAKS!?!?', input_data, some_var, more_stuff)
-    pyaml.print(data, file=sys.stderr) # needs "from __future__ import print_function"
+    pyaml.print(data, file=sys.stderr)
 
 * Force all string values to a certain style (see info on these in `PyYAML docs`_)::
 
@@ -298,6 +305,7 @@ Features and Tricks
 
   Such unknown-type values get truncated if their repr() is too long, which can
   be controlled by passing int max-length to repr_unknown instead of bool.
+  pyaml.debug() alias also implies repr_unknown=True flag.
 
 .. _PyYAML docs: http://pyyaml.org/wiki/PyYAMLDocumentation#Scalars
 .. _this SO thread: http://stackoverflow.com/a/7445560
