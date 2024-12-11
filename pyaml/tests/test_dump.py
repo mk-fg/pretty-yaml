@@ -592,6 +592,27 @@ class DumpTests(unittest.TestCase):
 		self.assertNotEqual(ys2, ys3)
 		self.assertEqual(self.empty_line_list(ys3), [1, 4, 8, 11, 14, 18])
 
+	def test_repr_undefined(self):
+		class TestType1:
+			def __repr__(self): return large_yaml.decode()
+		class TestType2:
+			def __repr__(self): return '# should end up quoted' + ' '*100
+		unknown3 = type('TestType3', (object,), dict(a='b'))()
+		with open('/dev/null') as unknown4:
+			data = dict( known='val', unknown1=TestType1(),
+				unknown2=TestType2(), unknown3=unknown3, unknown4=unknown4 )
+		with self.assertRaises(yaml.YAMLError): ys = pyaml.dump(data)
+		with self.assertRaises(yaml.YAMLError): ys = pyaml.dump(unknown3)
+		self.assertIn(' ...[1/', pyaml.dump(data, repr_unknown=1))
+		ys = pyaml.dump(data, repr_unknown=True)
+		self.assertEqual(len(ys.splitlines()), 5)
+		self.assertIn('pyaml.tests.test_dump.TestType3', ys)
+		self.assertIn('TextIOWrapper', ys)
+		ys = pyaml.dump(data, width=30, repr_unknown=30)
+		self.assertEqual(len(ys.splitlines()), 5)
+		self.assertIn(' ...[30/', ys)
+		self.assertNotIn('unknown2: # should end up quoted', ys)
+		self.assertIn('pyaml.tests.test_dump.TestType3', ys)
 
 if __name__ == '__main__':
 	unittest.main()

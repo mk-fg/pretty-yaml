@@ -259,7 +259,7 @@ Features and Tricks
 * Control thresholds for vertical spacing of values (0 = always space stuff out),
   and clump all oneliner ones at the top::
 
-    >>> pyaml.dump( data,
+    >>> pyaml.p( data,
       sort_dicts=pyaml.PYAMLSort.oneline_group,
       vspacing=dict(split_lines=0, split_count=0) )
 
@@ -285,6 +285,20 @@ Features and Tricks
         mode: none
 
   Or same thing with cli tool ``-v/--vspacing`` option: ``pyaml -v 0/0g mydata.yaml``
+
+* Dump any non-YAML-type values when debugging or to replace later::
+
+    >>> unknown1 = type('test2', (object,), dict(a='b'))()
+    >>> unknown2 = type('test2', (object,), dict(__repr__=lambda s: '# test2 repr'+' '*80))()
+    >>> data = dict(known='test1', unknown1=unknown1, unknown2=unknown2)
+    >>> pyaml.p(data, repr_unknown=True)
+
+    known: test1
+    unknown1: <__main__.test2 object at 0x7fb19d8a8c80> # python value
+    unknown2: '# test2 repr                                       ...[50/92]' # python __main__.test2
+
+  Such unknown-type values get truncated if their repr() is too long, which can
+  be controlled by passing int max-length to repr_unknown instead of bool.
 
 .. _PyYAML docs: http://pyyaml.org/wiki/PyYAMLDocumentation#Scalars
 .. _this SO thread: http://stackoverflow.com/a/7445560

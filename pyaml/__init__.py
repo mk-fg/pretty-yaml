@@ -9,13 +9,14 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 
 	class str_ext(str): __slots__ = 'ext',
 	pyaml_anchor_decode = None # imported from unidecode module when needed
-	pyaml_sort_dicts = None
+	pyaml_sort_dicts = pyaml_repr_unknown = None
 
-	def __init__( self, *args, sort_dicts=None,
-			force_embed=True, string_val_style=None, anchor_len_max=40, **kws ):
+	def __init__( self, *args, sort_dicts=None, force_embed=True,
+			string_val_style=None, anchor_len_max=40, repr_unknown=False, **kws ):
 		self.pyaml_force_embed = force_embed
 		self.pyaml_string_val_style = string_val_style
 		self.pyaml_anchor_len_max = anchor_len_max
+		self.pyaml_repr_unknown = repr_unknown
 		if isinstance(sort_dicts, PYAMLSort):
 			if sort_dicts is sort_dicts.none: kws['sort_keys'] = False
 			elif sort_dicts is sort_dicts.keys: kws['sort_keys'] = True
@@ -136,15 +137,27 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 			if not callable(getattr(data, 'tolist', None)): raise AttributeError
 		except: pass # can raise other errors with custom types
 		else: return self.represent_data(data.tolist())
+		if self.pyaml_repr_unknown: # repr value as a short oneliner
+			if isinstance(n := self.pyaml_repr_unknown, bool): n = 50
+			if len(s := repr(data).replace('\n', '⏎')) > n + 10:
+				if (m := re.search(r' at (0x[0-9a-f]+>)$', s)) and n > len(m[0]):
+					s = s[:n-len(m[0])] + f' ~[{n:,d}/{len(s):,d}]~ ' + m[1]
+				else: s = s[:n] + f' ...[{n:,d}/{len(s):,d}]'
+			cls, node = data.__class__, self.represent_data(s)
+			if (st := f'{cls.__module__}.{cls.__name__}') in s: st = 'value'
+			node.value = (s := self.str_ext(s)); s.ext = f'# python {st}'; return node
 		return super().represent_undefined(data) # will raise RepresenterError
 
 	def write_ext(self, func, text, *args, **kws):
 		# Emitter write-funcs extension to append comments to values
 		getattr(super(), f'write_{func}')(text, *args, **kws)
-		if ext := getattr(text, 'ext', None): super().write_plain(ext)
+		if ext := getattr(text, 'ext', None): super().write_plain(ext, split=False)
 	write_folded = lambda s,v,*a,**kw: s.write_ext('folded', v, *a, **kw)
 	write_literal = lambda s,v,*a,**kw: s.write_ext('literal', v, *a, **kw)
-	write_plain = lambda s,v,*a,**kw: s.write_ext('plain', v, *a, **kw)
+	write_single_quoted = lambda s,v,*a,**kw: s.write_ext('single_quoted', v, *a, **kw)
+	write_double_quoted = lambda s,v,*a,**kw: s.write_ext('double_quoted', v, *a, **kw)
+	# Long write_plain shouldn't be split over multiple lines, as it'd break YAML
+	write_plain = lambda s,v,split=True: s.write_ext('plain', v, split=False)
 
 
 # Unsafe was a separate class in <23.x versions, left here for compatibility
@@ -205,7 +218,8 @@ def dump_add_vspacing( yaml_str,
 
 
 def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
-		string_val_style=None, sort_dicts=None, multiple_docs=False, width=100, **pyyaml_kws ):
+		string_val_style=None, sort_dicts=None, multiple_docs=False, width=100,
+		repr_unknown=False, **pyyaml_kws ):
 	'''Serialize data as pretty-YAML to specified dst file-like object,
 		or return as str with dst=str (default) or encoded to bytes with dst=bytes.'''
 	if safe is not None:
@@ -225,7 +239,8 @@ def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
 
 	buff = io.StringIO()
 	Dumper = lambda *a,**kw: PYAMLDumper( *a, **kw,
-		force_embed=force_embed, string_val_style=string_val_style, sort_dicts=sort_dicts )
+		force_embed=force_embed, string_val_style=string_val_style,
+		sort_dicts=sort_dicts, repr_unknown=repr_unknown )
 	if not multiple_docs: data = [data]
 	else: pyyaml_kws.setdefault('explicit_start', True)
 	yaml.dump_all( data, buff, Dumper=Dumper, width=width,
