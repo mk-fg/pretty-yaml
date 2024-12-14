@@ -322,7 +322,7 @@ It's a regular Python 3.8+ module/package, published on PyPI (as pyaml_).
 Module uses PyYAML_ for processing of the actual YAML files
 and should pull it in as a dependency.
 
-Dependency on unidecode_ module is optional and only be used with
+Dependency on unidecode_ module is optional and only used with
 force_embed=False keyword (defaults to True), and same-id objects
 or recursion within serialized data - i.e. only when generating
 &some_key_id anchors is actually needed.

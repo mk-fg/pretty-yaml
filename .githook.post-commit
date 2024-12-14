@@ -27,4 +27,4 @@ ver=$( git show --no-color --diff-filter=M -aU0 pyproject.toml |
 	echo $'\ngit-post-commit :: no new tag, last one matches pyproject.toml\n'; exit 0; }
 
 git tag -f "$ver" HEAD # can be reassigning tag after --amend
-echo -e "\ngit-post-commit: tagged new release [ $ver ]\n"
+echo -e "\ngit-post-commit :: tagged new release [ $ver ]\n"
