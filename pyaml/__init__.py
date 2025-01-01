@@ -268,7 +268,7 @@ def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
 		else: dst.write(buff.encode())
 
 
-# Simplier pyaml.dump() aliases
+# Simpler pyaml.dump() aliases
 
 def dump_all(data, *dump_args, **dump_kws):
 	'Alias to dump(list, multiple_docs=True) for API compatibility with pyyaml'
