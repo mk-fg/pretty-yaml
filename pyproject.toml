@@ -31,4 +31,4 @@ readme = {file="README.rst"}
 anchors = ["unidecode"]
 
 [project.scripts]
-pyaml = "pyaml.__main__:main"
+pyaml = "pyaml.cli:main"
