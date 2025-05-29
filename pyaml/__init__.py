@@ -150,14 +150,17 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 
 	def write_ext(self, func, text, *args, **kws):
 		# Emitter write-funcs extension to append comments to values
+		if ext := getattr(text, 'ext', None):
+			# Commented values are enums/class-reprs and such, which shouldn't be split
+			if args: args = [False, *args[1:]]
+			else: kws['split'] = False
 		getattr(super(), f'write_{func}')(text, *args, **kws)
-		if ext := getattr(text, 'ext', None): super().write_plain(ext, split=False)
+		if ext: super().write_plain(ext, split=False)
 	write_folded = lambda s,v,*a,**kw: s.write_ext('folded', v, *a, **kw)
 	write_literal = lambda s,v,*a,**kw: s.write_ext('literal', v, *a, **kw)
 	write_single_quoted = lambda s,v,*a,**kw: s.write_ext('single_quoted', v, *a, **kw)
 	write_double_quoted = lambda s,v,*a,**kw: s.write_ext('double_quoted', v, *a, **kw)
-	# Long write_plain shouldn't be split over multiple lines, as it'd break YAML
-	write_plain = lambda s,v,split=True: s.write_ext('plain', v, split=False)
+	write_plain = lambda s,v,split=True: s.write_ext('plain', v, split)
 
 
 # Unsafe was a separate class in <23.x versions, left here for compatibility

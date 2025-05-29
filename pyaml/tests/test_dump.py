@@ -614,6 +614,19 @@ class DumpTests(unittest.TestCase):
 		self.assertNotIn('unknown2: # should end up quoted', ys)
 		self.assertIn('pyaml.tests.test_dump.TestType3', ys)
 
+	def test_long_value_split(self):
+		data = dict(
+			sshkey=dict(__XML__PARAM__line=dict(__XML__value=f'ssh-rsa {"X"*372} user@host')),
+			vlan=[{'__XML__PARAM__vlan-id-create-delete': dict(__XML__value='1, 30, 50,'
+				' 110, 121-126, 999-1001, 1010, 1012, 1014, 1016, 1018, 1020-1022, 1060-1063,'
+				' 1080-1083, 1111-1113, 2000, 2201-2202, 2206, 2208, 2210, 2254, 3000, 3002,'
+				' 3006, 3008, 3021, 3100-3102, 3106, 3108, 3121, 3322, 3326, 3328, 3448-3452,'
+				' 3455-3458, 3950, 3955, 3960, 3965-3966')}] )
+		ys = pyaml.dump(data)
+		self.assertEqual(len(ys.splitlines()), 9)
+		self.assertEqual(yaml.safe_load(ys), data)
+
+
 if __name__ == '__main__':
 	unittest.main()
 	# print('-'*80)
