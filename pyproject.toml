@@ -1,7 +1,7 @@
 [project]
 
 name = "pyaml"
-version = "25.5.0"
+version = "25.7.0"
 
 description = "PyYAML-based module to produce a bit more pretty and readable YAML-serialized data"
 authors = [{name="Mike Kazantsev", email="mk.fraggod@gmail.com"}]
