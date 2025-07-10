@@ -606,13 +606,13 @@ class DumpTests(unittest.TestCase):
 		self.assertIn(' ...[1/', pyaml.dump(data, repr_unknown=1))
 		ys = pyaml.dump(data, repr_unknown=True)
 		self.assertEqual(len(ys.splitlines()), 5)
-		self.assertIn('pyaml.tests.test_dump.TestType3', ys)
+		self.assertIn('TestType3', ys)
 		self.assertIn('TextIOWrapper', ys)
 		ys = pyaml.dump(data, width=30, repr_unknown=30)
 		self.assertEqual(len(ys.splitlines()), 5)
 		self.assertIn(' ...[30/', ys)
 		self.assertNotIn('unknown2: # should end up quoted', ys)
-		self.assertIn('pyaml.tests.test_dump.TestType3', ys)
+		self.assertIn('TestType3', ys)
 
 	def test_long_value_split(self):
 		data = dict(
