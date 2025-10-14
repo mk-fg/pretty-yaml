@@ -53,9 +53,9 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 					self.anchor_node(key)
 					self.anchor_node(value, hints=hints+[key])
 
-	def serialize_node(self, node, parent, index):
-		if self.pyaml_force_embed: self.anchors[node] = self.serialized_nodes.clear()
-		return super().serialize_node(node, parent, index)
+	def ignore_aliases(self, data):
+		if self.pyaml_force_embed: return True
+		return super().ignore_aliases(data)
 
 	def expect_block_sequence(self):
 		self.increase_indent(flow=False, indentless=False)
