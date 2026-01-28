@@ -76,7 +76,7 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 		if self.analysis: self.analysis.allow_flow_plain = False
 		return res
 
-	def choose_scalar_style(self, _re1=re.compile(r':(\s|$)')):
+	def choose_scalar_style(self, _re1=re.compile(r':(\s|\Z)')):
 		if self.states[-1] == self.expect_block_mapping_simple_value:
 			# Mapping keys - disable overriding string style, strip comments
 			if self.pyaml_string_val_style: self.event.style = 'plain'
@@ -140,7 +140,7 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 		if self.pyaml_repr_unknown: # repr value as a short oneliner
 			if isinstance(n := self.pyaml_repr_unknown, bool): n = 50
 			if len(s := repr(data).replace('\n', '⏎')) > n + 10:
-				if (m := re.search(r' at (0x[0-9a-f]+>)$', s)) and n > len(m[0]):
+				if (m := re.search(r' at (0x[0-9a-f]+>)\Z', s)) and n > len(m[0]):
 					s = s[:n-len(m[0])] + f' ~[{n:,d}/{len(s):,d}]~ ' + m[1]
 				else: s = s[:n] + f' ...[{n:,d}/{len(s):,d}]'
 			cls, node = data.__class__, self.represent_data(s)
@@ -201,7 +201,7 @@ def dump_add_vspacing( yaml_str,
 					blocks.append((a, n, _add_vspacing(block)[a_seq:]))
 				ind_re_sub = None
 			if ind_re.match(line): item_lines.append(n)
-			if m := re.match(r'( *)(- )?\S.*:(\s|$)', line):
+			if m := re.match(r'( *)(- )?\S.*:(\s|\Z)', line):
 				a, a_seq, ind_re_sub = n+1, bool(m[2]), re.compile(m[1] + ' ')
 		if ( split_items := len(lines) > split_lines and
 				len(item_lines) > split_count and (oneline_split or has_sub) ):
