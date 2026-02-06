@@ -134,7 +134,7 @@ class CliToolTests(unittest.TestCase):
 		err.seek(0); err.truncate()
 
 		with tempfile.NamedTemporaryFile(prefix='.pyaml.test.') as tmp:
-			d_json, d_yaml = json.dumps(d).encode(), pyaml.dump(d, bytes)
+			d_json = json.dumps(d).encode()
 			tmp.write(d_json); tmp.flush()
 			os.fchmod(tmp.fileno(), 0o1510)
 			stat_tmp = os.fstat(tmp.fileno())
@@ -227,5 +227,40 @@ class CliToolTests(unittest.TestCase):
 		self.assertEqual(xd3.get('doc3_val'), d3['doc3_val'])
 		self.assertNotIn('doc2_val', xd3)
 		self.assertNotIn('---', out.getvalue())
+
+	def test_multiple_args(self):
+		ds, out, err = [data.copy(), dict(data, diff=123)], io.StringIO(), io.StringIO()
+		sys_out, sys_err = sys.stdout, sys.stderr
+		with tempfile.NamedTemporaryFile(prefix='.pyaml.test.') as tmp1, \
+				tempfile.NamedTemporaryFile(prefix='.pyaml.test.') as tmp2:
+			tmp_files, ds_json = [tmp1, tmp2], list(json.dumps(d).encode() for d in ds)
+			for tmp, d_json in zip(tmp_files, ds_json): tmp.write(d_json); tmp.flush()
+
+			with self.assertRaises(SystemExit):
+				sys.stdout, sys.stderr = out, err
+				try: pyaml.cli.main(
+					argv=['-r', tmp1.name, '', tmp2.name], # empty arg = stdin
+					stdin=io.StringIO(), stdout=out, stderr=err )
+				finally: sys.stdout, sys.stderr = sys_out, sys_err
+				for tmp, d_json in zip(tmp_files, ds_json):
+					tmp.seek(0); self.assertEqual(tmp.read().decode(), d_json)
+			self.assertEqual(out.getvalue(), '')
+			self.assertGreater(len(err.getvalue()), 50)
+			err.seek(0); err.truncate()
+
+			pyaml.cli.main( argv=['-r', tmp1.name, tmp2.name],
+				stdin=io.StringIO(), stdout=out, stderr=err )
+			for tmp, d, d_json in zip(tmp_files, ds, ds_json):
+				tmp.seek(0); d_yaml = tmp.read().decode()
+				self.assertNotEqual(d_json, d_yaml)
+				self.assertEqual(self.data_hash(d), self.data_hash(yaml.safe_load(d_yaml)))
+			self.assertEqual(out.getvalue(), '')
+			self.assertEqual(err.getvalue(), '')
+
+			ys_stdin = yaml.safe_dump_all(
+				d_stdin := [dict(ds[0], diff2=dict(a=['xyz'])), 'abcde', [1,2,3]] )
+			pyaml.cli.main( argv=[tmp2.name, '', tmp1.name],
+				stdin=io.StringIO(ys_stdin), stdout=out, stderr=err )
+			self.assertEqual(list(yaml.safe_load_all(out.getvalue())), [ds[1], *d_stdin, ds[0]])
 
 if __name__ == '__main__': unittest.main()
