@@ -5,7 +5,7 @@ import yaml, pyaml
 @contextlib.contextmanager
 def safe_replacement(path, *open_args, mode=None, xattrs=None, **open_kws):
 	'Context to atomically create/replace file-path in-place unless errors are raised'
-	path, xattrs = str(path), None
+	path = str(path)
 	if mode is None:
 		try: mode = stat.S_IMODE(os.lstat(path).st_mode)
 		except FileNotFoundError: pass
@@ -59,6 +59,8 @@ def main(argv=None, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
 		With multiple paths, will output YAML documents from each one in the same order.'''))
 	parser.add_argument('-r', '--replace', action='store_true',
 		help='Replace specified YAML file(s) with prettified version in-place.')
+	parser.add_argument('-o', '--out-file', metavar='file-path',
+		help='Write output to specified file instead of standard output.')
 	parser.add_argument('-w', '--width', type=int, metavar='chars', help=dd('''
 		Max line width hint to pass to pyyaml for the dump.
 		Only used to format scalars and collections (e.g. lists).'''))
@@ -98,6 +100,8 @@ def main(argv=None, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
 
 	if not all(paths := opts.path or ['']) and opts.replace:
 		parser.error('-r/--replace option can only be used with a file path, not stdin')
+	if opts.out_file and opts.replace:
+		parser.error('-r/--replace and -o/--out-file options cannot be used at the same time')
 	with contextlib.ExitStack() as srcs:
 		data = list([p, srcs.enter_context(open(p)) if p else stdin] for p in (paths or ['']))
 		for d in data: d[1] = list( yaml.safe_load_all(d[1]) if not opts.lines else
@@ -122,8 +126,13 @@ def main(argv=None, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
 			err = f'[{err.__class__.__name__}] {err}'
 			p_err('  raised error: ' + ' // '.join(map(str.strip, err.split('\n'))))
 
-	if opts.replace:
-		for p, d, ys in data:
-			with safe_replacement(p) as tmp: tmp.write(ys)
-	else:
-		for p, d, ys in data: stdout.write(ys)
+	with contextlib.ExitStack() as dsts:
+		if opts.replace:
+			for d in data: d[0] = dsts.enter_context(safe_replacement(d[0]))
+		elif p := opts.out_file:
+			dst = dsts.enter_context( safe_replacement(p) if not
+				any(p.startswith(pre) for pre in ['/dev/', '/proc/']) else open(p, 'w') )
+			for d in data: d[0] = dst
+		else:
+			for d in data: d[0] = stdout
+		for dst, d, ys in data: dst.write(ys)
