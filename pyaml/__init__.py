@@ -266,8 +266,8 @@ def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
 	if dst is bytes: return buff.encode()
 	elif dst is str: return buff
 	else:
-		try: dst.write(b'') # tests if dst is str- or bytestream
-		except (TypeError, AttributeError): dst.write(buff)
+		try: dst.write(b'') # tests whether dst is str- or bytestream
+		except TypeError: dst.write(buff)
 		else: dst.write(buff.encode())
 
 

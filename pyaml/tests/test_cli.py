@@ -277,13 +277,13 @@ class CliToolTests(unittest.TestCase):
 			self.assertEqual(out.getvalue(), '')
 			self.assertGreater(len(err.getvalue()), 50)
 			err.seek(0); err.truncate()
+			tmp.seek(0); self.assertEqual(tmp.read(), d_tmp)
 
 			st = os.stat(p := '/dev/null'); st_id = st.st_dev, st.st_ino
 			pyaml.cli.main( argv=['-o', p], # shouldn't replace dev node
 				stdin=io.StringIO(ys), stdout=out, stderr=err )
 			self.assertEqual(out.getvalue(), '')
 			self.assertEqual(err.getvalue(), '')
-			tmp.seek(0); self.assertEqual(tmp.read(), d_tmp)
 			st = os.stat(p); self.assertEqual((st.st_dev, st.st_ino), st_id)
 
 			pyaml.cli.main( argv=['-o', tmp.name],

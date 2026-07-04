@@ -349,7 +349,7 @@ pipx_ can be used to install command-line script without a module.
 More general info on python packaging can be found at `packaging.python.org`_.
 
 When changing code, unit tests can be run with ``python -m unittest``
-from the local repository checkout.
+from a local repository checkout.
 
 .. _pyaml: https://pypi.org/project/pyaml/
 .. _unidecode: https://pypi.python.org/pypi/Unidecode
