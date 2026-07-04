@@ -135,7 +135,7 @@ class PYAMLDumper(yaml.dumper.SafeDumper):
 			else: return self.represent_dict(dcs.asdict(data))
 		try: # this is for numpy arrays, and the likes
 			if not callable(getattr(data, 'tolist', None)): raise AttributeError
-		except: pass # can raise other errors with custom types
+		except Exception: pass # can raise other errors with custom types
 		else: return self.represent_data(data.tolist())
 		if self.pyaml_repr_unknown: # repr value as a short oneliner
 			if isinstance(n := self.pyaml_repr_unknown, bool): n = 50
@@ -267,7 +267,7 @@ def dump( data, dst=None, safe=None, force_embed=True, vspacing=True,
 	elif dst is str: return buff
 	else:
 		try: dst.write(b'') # tests if dst is str- or bytestream
-		except: dst.write(buff)
+		except (TypeError, AttributeError): dst.write(buff)
 		else: dst.write(buff.encode())
 
 
