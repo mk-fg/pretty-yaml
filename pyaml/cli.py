@@ -102,8 +102,14 @@ def main(argv=None, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr):
 		parser.error('-r/--replace option can only be used with a file path, not stdin')
 	if opts.out_file and opts.replace:
 		parser.error('-r/--replace and -o/--out-file options cannot be used at the same time')
+	def open_input(p):
+		try: return open(p)
+		except OSError as err:
+			print( f'pyaml: error: cannot open input file {p!r}:'
+				f' {err.strerror or err}', file=stderr, flush=True )
+			raise SystemExit(2)
 	with contextlib.ExitStack() as srcs:
-		data = list([p, srcs.enter_context(open(p)) if p else stdin] for p in (paths or ['']))
+		data = list([p, srcs.enter_context(open_input(p)) if p else stdin] for p in (paths or ['']))
 		for d in data: d[1] = list( yaml.safe_load_all(d[1]) if not opts.lines else
 			(yaml.safe_load(chunk) for chunk in file_line_iter(d[1]) if chunk.strip()) )
 	for d in data: d.append(
